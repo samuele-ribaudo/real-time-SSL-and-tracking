@@ -99,7 +99,11 @@ Because servo gears create immense acoustic noise, the system cannot listen and 
 
 * **Manual filtering algorithms:** write a custom C implementation of a discrete band-pass filter (approx. 300 Hz - 3000 Hz) to isolate human speech and an amplitude threshold function to keep the system idle in a quiet room.
 * **Cross-correlation & TDOA:** implement a time-domain cross-correlation algorithm from scratch to compare the two audio buffers and extract the sample offset.
-* **Geometric angle calculation:** write the logic to compute the relative azimuth angle $\theta$ using the formula: $$\theta = \arcsin\left(\frac{\Delta t \cdot v}{d}\right)$$. Integrate the software logic to add this relative offset to the `current_servo_angle`.
+* **Geometric angle calculation:** write the logic to compute the relative azimuth angle $\theta$ using the formula:
+
+$$\theta = \arcsin\left(\frac{\Delta t \cdot v}{d}\right)$$
+
+Integrate the software logic to add this relative offset to the `current_servo_angle`.
 
 **Group member 3: physical hardware, actuation & FSM**
 
@@ -114,9 +118,9 @@ Because servo gears create immense acoustic noise, the system cannot listen and 
 | **Material component Description** | **Qty** | **Target application / Notes** | **Sourcing / Cost** |
 | --- | --- | --- | --- |
 | NUCLEO-U083RC Development Board | 1 | Main STM32 microcontroller unit | Lab inventory |
-| Analog microphones | 2 | Analog microphones for capturing audio |  |
-| 180° servo motor | 1 | Positional actuator for rotating the sensor platform | Lab inventory |
-| Acoustic foam block | 1 | High-density foam sponge to block rear audio signals |
+| MAX4466 analog microphones | 2 | Analog microphones for capturing audio | [berrybase ↗](https://www.berrybase.de/elektretmikrofonverstaerker-gy-max4466) (€1,50 cad.)|
+| MG996R 180° servo motor | 1 | Positional actuator for rotating the sensor platform | [berrybase ↗](https://www.berrybase.de/waveshare-mg996r-servo-motor-4-8-6v-metallgetriebe-9-11kg-cm-drehmoment-1800-drehwinkel) (€6,50) |
+| Acoustic foam block | 1 | High-density foam sponge to block rear audio signals | Probably in the trash |
 | RGB LED | 1 | 4 pin LED for FSM state and limit reached indication | Lab inventory |
 | PLA filament (3D Printing) | 1 | Material for printing the frame, ears, and servo mounts | Lab inventory |
 | Assorted wires & breadboard | 1 | General circuit routing and power distribution | Lab inventory |
