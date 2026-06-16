@@ -89,27 +89,32 @@ Because servo gears create immense acoustic noise, the system cannot listen and 
 
 ## 6. Workload distribution & task definition
 
-**Group member 1: low level firmware & audio acquisition pipeline**
+**[Samuele]: Low-level firmware & audio acquisition pipeline**
 
-* **Synchronous ADC configuration:** configure two distinct ADC channels on the STM32 using HAL. Set up a hardware Timer as the trigger source to guarantee a strict, deterministic sampling rate.
-* **DMA buffer management:** implement circular DMA requests to pipe the ADC values directly into RAM without CPU intervention. Write the callback functions to flag the FSM when an audio window is ready.
-* **Interrupts & callbacks:** write the functions to safely flag the main state machine when a full audio window is ready for processing, ensuring memory isn't overwritten during calculations.
+* **Synchronous ADC configuration:** Configure two distinct ADC channels on the STM32, setting up a hardware timer as the trigger source to guarantee a strict, deterministic sampling rate.
 
-**Group Member 2: digital signal processing & mathematical algorithms**
+* **DMA buffer management:** Implement circular DMA requests to pipe the ADC values directly into RAM without CPU intervention. Write the callback functions to flag the FSM when an audio window is ready.
 
-* **Manual filtering algorithms:** write a custom C implementation of a discrete band-pass filter (approx. 300 Hz - 3000 Hz) to isolate human speech and an amplitude threshold function to keep the system idle in a quiet room.
-* **Cross-correlation & TDOA:** implement a time-domain cross-correlation algorithm from scratch to compare the two audio buffers and extract the sample offset.
-* **Geometric angle calculation:** write the logic to compute the relative azimuth angle $\theta$ using the formula:
+* **Interrupts & callbacks:** Write the functions to safely flag the main state machine when a full audio window is ready for processing, ensuring memory isn't overwritten during calculations.
 
+* **Manual filtering algorithms:** Write a custom C implementation of a discrete band-pass filter (approx. 300 Hz - 3000 Hz) to isolate human speech and an amplitude threshold function to keep the system idle in a quiet room.
+
+* **Cross-correlation & TDOA:** Implement a time-domain cross-correlation algorithm from scratch to compare the two audio buffers and extract the sample offset.
+
+* **Geometric angle calculation:** Write the logic to compute the relative azimuth angle $\theta$ using the formula: 
 $$\theta = \arcsin\left(\frac{\Delta t \cdot v}{d}\right)$$
 
-Integrate the software logic to add this relative offset to the `current_servo_angle`.
 
-**Group member 3: physical hardware, actuation & FSM**
+**[Ryan]: Physical hardware, actuation & system FSM**
 
-* **CAD design & fabrication:** design the 3D printable structural mounts for the servo motor, the acoustic foam baffle, and the aesthetic ears. Wire the analog microphones and LED to the Nucleo board, ensuring shared grounds and slack in the wiring to allow safe 180° actuation.
-* **PWM servo & LED actuation:** configure an STM32 Timer to output a PWM signal to drive the servo. Configure standard GPIO pins to control the Red, Green, and Blue channels of the status LED.
-* **State machine:** program the core `main.c` `while(1)` loop containing the Listen, Compute, Actuate, and Settle states. Implement the software clamping limits, the 5 second timeout reset, and the specific RGB color triggers.
+* **CAD design & fabrication:** Design the 3D printable structural mounts for the servo motor, the acoustic foam baffle, and the "ears". Wire the analog microphones and LED to the Nucleo board, ensuring shared grounds and safe 180° actuation.
+
+* **PWM servo & LED actuation:** Configure an STM32 timer to output a PWM signal to drive the servo motor. Configure standard GPIO pins to control the Red, Green, and Blue channels of the status LED to provide real-time visual feedback.
+
+* **State machine implementation:** Program the core `main.c` state machine architecture containing the Listen, Compute, Actuate, and Settle states.
+
+* **Application logic & safety controls:** Integrate the software logic to add the relative offset from Samuele to the `current_servo_angle`. Implement the software clamping limits, the 5 second timeout reset, and the specific RGB color triggers based on the active state.
+
 
 ---
 
