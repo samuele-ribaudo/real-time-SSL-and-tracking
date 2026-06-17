@@ -1,5 +1,10 @@
 # Real-Time Sound Source Localization and Tracking System
 
+| Name | Matr. | Email |
+|------|---------|-------|
+| Samuele Ribaudo | 03821248 | samuele.ribaudo@tum.de |
+| Hong Yan Jun  | 03813507 | go75kes@mytum.de |
+
 ## 1. Project overview
 
 This project is a robotic "hearing" system that can detect where a sound is coming from and automatically turn to face it.
