@@ -10,7 +10,7 @@ Using an STM32 microcontroller and two standard microphones, the system acts lik
 
 ## 2. Detailed system description
 
-At a technical level, this project implements an embedded Sound Source Localization (SSL) and tracking system utilizing a NUCLEO-U083RC microcontroller developed within the VS Code STM32CubeIDE environment. The system continuously records environmental audio via two analog microphones spaced at a fixed distance. Using cross-correlation algorithms and digital filters, the system calculates the Time Delay of Arrival (TDOA) between the microphones to determine the precise azimuth angle of a human speaker.
+At a technical level, this project implements an embedded Sound Source Localization (SSL) and tracking system utilizing a NUCLEO-U083RC microcontroller developed within the STM32CubeIDE environment. The system continuously records environmental audio via two analog microphones spaced at a fixed distance. Using cross-correlation algorithms and digital filters, the system calculates the Time Delay of Arrival (TDOA) between the microphones to determine the precise azimuth angle of a human speaker.
 
 To overcome the processing limitations of the micro controller and the physical realities of robotics, the system employs clever hardware-software design. It uses an acoustic foam baffle to eliminate the front-back "cone of confusion", calculates all math algorithms from scratch without relying on pre-built DSP libraries, and utilizes a strict "Listen-Compute-Move" state machine to prevent mechanical servo noise from corrupting the audio buffers. A 180° servo motor dynamically actuates the sensor array using a "relative-to-absolute" coordinate mapping to track the sound source.
 
@@ -75,45 +75,45 @@ Custom PLA components including the structural mounts for the microphones, the a
 Because servo gears create immense acoustic noise, the system cannot listen and move at the same time. The finite state machine (FSM) runs sequentially:
 
 **`STATE_LISTEN` (Blue LED pulsing):** The servo is locked in place. The ADC+DMA pipeline is activated to record 1024 samples.
+
 **`STATE_COMPUTE`(Blue LED pulsing):** Audio recording stops. The MCU applies a band-pass filter to check for human speech frequencies. If the audio passes the threshold, cross-correlation is performed to calculate the relative angle.
+
 **`STATE_ACTUATE` (Blue LED solid):** The MCU maps the relative angle to the global coordinate frame and updates the Timer PWM duty cycle.
-**`STATE_SETTLE`(Green LED solid):** A non-blocking 100ms delay allows the mechanical vibrations of the servo to dissipate before returning to `STATE_LISTEN`.
+
+**`STATE_SETTLE`(Green LED solid):** A non-blocking delay allows the mechanical vibrations of the servo to dissipate before returning to `STATE_LISTEN`.
+
+**`STATE_OUT_OF_BOUNDS` (Red LED flashing):** Triggered when the calculated angle exceeds physical limits. The system flashes the red LED for 1.5 seconds before automatically transitioning back to `STATE_LISTEN`.
 
 **Crucial variables for relative tracking and limits:**
 
 * `current_servo_angle`: Stores the absolute position (0° to 180°) of the platform relative to the room.
 * `relative_angle`: The calculated offset from the microphones (-90° to +90°).
-* **Limit logic & timeout reset:** The software calculates `new_angle = current_servo_angle + relative_angle`. If `new_angle` exceeds 180° or drops below 0°, the RGB LED flashes **Red** to indicate a range breach. If no sound is detected within the tracking cone for 5 seconds, the system automatically resets `current_servo_angle = 90` and returns to a center resting position.
+* **Limit logic & timeout reset:** The software calculates `new_angle = current_servo_angle + relative_angle`. If `new_angle` exceeds 180° or drops below 0°, the FSM transitions to `STATE_OUT_OF_BOUNDS` to flash the red LED for 1.5 seconds. If no sound is detected within the tracking cone for 5 seconds, the system automatically resets `current_servo_angle = 90` and returns to a center resting position.
 
 ---
 
 ## 6. Workload distribution & task definition
 
-**[Samuele]: Low-level firmware & audio acquisition pipeline**
+#### **[Samuele]: Setup, FSM & application logic**
+ * **STM32CubeMX peripheral configuration:** Configure the core hardware initialization, including dual ADC channels, circular DMA streams, Hardware Timers (for deterministic sampling triggers and PWM generation), and GPIOs for the RGB LED. Generate the baseline project skeleton.
 
-* **Synchronous ADC configuration:** Configure two distinct ADC channels on the STM32, setting up a hardware timer as the trigger source to guarantee a strict, deterministic sampling rate.
+ * **State machine implementation:** Program the core main.c architecture, managing the sequential transitions between STATE_LISTEN, STATE_COMPUTE, STATE_ACTUATE, STATE_SETTLE, and STATE_OUT_OF_BOUNDS. Handle the DMA interrupt callbacks to orchestrate data handoffs safely.
 
-* **DMA buffer management:** Implement circular DMA requests to pipe the ADC values directly into RAM without CPU intervention. Write the callback functions to flag the FSM when an audio window is ready.
-
-* **Interrupts & callbacks:** Write the functions to safely flag the main state machine when a full audio window is ready for processing, ensuring memory isn't overwritten during calculations.
-
-* **Manual filtering algorithms:** Write a custom C implementation of a discrete band-pass filter (approx. 300 Hz - 3000 Hz) to isolate human speech and an amplitude threshold function to keep the system idle in a quiet room.
-
-* **Cross-correlation & TDOA:** Implement a time-domain cross-correlation algorithm from scratch to compare the two audio buffers and extract the sample offset.
-
-* **Geometric angle calculation:** Write the logic to compute the relative azimuth angle $\theta$ using the formula: 
-$$\theta = \arcsin\left(\frac{\Delta t \cdot v}{d}\right)$$
+ * **Geometric angle calculation:** Take the raw sample offset provided by Ryan's algorithm and calculate the relative azimuth angle $\theta$ using the geometric formula: 
+ $$\theta = \arcsin\left(\frac{\Delta t \cdot v}{d}\right)$$
+   
+ * **Actuation, safety controls & limits:** Map the calculated absolute angle to the corresponding Timer PWM duty cycle for the servo. Implement the 0° to 180° software clamping limits, the 1.5-second `STATE_OUT_OF_BOUNDS` non-blocking recovery timer, the 5-second inactivity timeout reset, and the specific RGB color triggers for each state.
 
 
-**[Ryan]: Physical hardware, actuation & system FSM**
+#### **[Ryan]: Hardware, fabrication & DSP algorithms**
 
-* **CAD design & fabrication:** Design the 3D printable structural mounts for the servo motor, the acoustic foam baffle, and the "ears". Wire the analog microphones and LED to the Nucleo board, ensuring shared grounds and safe 180° actuation.
+ * **CAD design & fabrication:** Design the 3D-printable structural mounts for the servo motor, the acoustic foam baffle, and the external "ears."
 
-* **PWM servo & LED actuation:** Configure an STM32 timer to output a PWM signal to drive the servo motor. Configure standard GPIO pins to control the Red, Green, and Blue channels of the status LED to provide real-time visual feedback.
+ * **Physical assembly & circuit wiring:** Build the physical prototype. Wire the two analog microphones, the RGB LED, and the servo motor to the Nucleo board, ensuring solid power delivery and shared grounds.
 
-* **State machine implementation:** Program the core `main.c` state machine architecture containing the Listen, Compute, Actuate, and Settle states.
+ * **Manual filtering algorithms:** Write a custom C implementation of a discrete band-pass filter (approx. 300 Hz - 3000 Hz) to isolate human speech frequencies from background noise. Include an amplitude threshold function to keep the pipeline idle when the room is quiet.
 
-* **Application logic & safety controls:** Integrate the software logic to add the relative offset from Samuele to the `current_servo_angle`. Implement the software clamping limits, the 5 second timeout reset, and the specific RGB color triggers based on the active state.
+ * **Cross-correlation & TDOA:** Implement the time-domain cross-correlation algorithm from scratch. This function will ingest the raw audio buffers provided by Samuele's DMA pipeline, compare them, and output the exact sample offset.
 
 
 ---
