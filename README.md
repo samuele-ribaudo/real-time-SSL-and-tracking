@@ -100,7 +100,7 @@ Because servo gears create immense acoustic noise, the system cannot listen and 
 ## 6. Workload distribution & task definition
 
 #### **[Samuele]: Setup, FSM & application logic**
- * **STM32CubeMX peripheral configuration:** Configure the core hardware initialization, including dual ADC channels, circular DMA streams, Hardware Timers (for deterministic sampling triggers and PWM generation), and GPIOs for the RGB LED. Generate the baseline project skeleton.
+ * **STM32CubeMX peripheral configuration:** Configure the core hardware initialization, including dual ADC channels, circular DMA streams, Hardware Timers (e.g. for PWM generation), and GPIOs for the RGB LED. Generate the baseline project skeleton.
 
  * **State machine implementation:** Program the core main.c architecture, managing the sequential transitions between STATE_LISTEN, STATE_COMPUTE, STATE_ACTUATE, STATE_SETTLE, and STATE_OUT_OF_BOUNDS. Handle the DMA interrupt callbacks to orchestrate data handoffs safely.
 
