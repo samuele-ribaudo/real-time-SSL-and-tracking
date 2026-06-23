@@ -6,6 +6,15 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Private defines -----------------------------------------------------------*/
+typedef enum {
+    STATE_LISTEN,
+    STATE_COMPUTE,
+    STATE_ACTUATE,
+    STATE_SETTLE,
+    STATE_OUT_OF_BOUNDS
+} system_state_t;
+
 
 /* Setup variables -----------------------------------------------------------*/
 COM_InitTypeDef BspCOMInit;
