@@ -1,0 +1,10 @@
+build
+mx.scratch
+!.settings
+.clangd/
+.cache/
+compile_commands.json
+code.ioc
+.vscode
+.clangd/
+.mxproject
