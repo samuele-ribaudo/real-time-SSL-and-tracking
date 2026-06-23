@@ -1,10 +1,19 @@
 #include "main.h"
 #include "config.h"
 #include "dsp_pipeline.h"
+#include "stm32u0xx_hal_adc.h"
 
 /* Private defines -----------------------------------------------------------*/
+typedef enum {
+    STATE_LISTEN,
+    STATE_COMPUTE,
+    STATE_ACTUATE,
+    STATE_SETTLE,
+    STATE_OUT_OF_BOUNDS
+} system_state_t;
 
-/* Private variables ---------------------------------------------------------*/
+
+/* Setup variables -----------------------------------------------------------*/
 COM_InitTypeDef BspCOMInit;
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
@@ -12,8 +21,23 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 
 
-/* Private function prototypes -----------------------------------------------*/
+/* Function prototypes -------------------------------------------------------*/
 static void stm32cubeMX_setup(void);
+static void split_raw_data(void);
+
+
+/* Variables -----------------------------------------------------------------*/
+// global state machine tracker
+volatile system_state_t system_state = STATE_LISTEN;
+
+// audio buffers
+uint16_t adc_dma_buffer[TOTAL_DMA_BUFFER_SIZE];
+uint16_t left_channel_buffer[AUDIO_BUFFER_SIZE];
+uint16_t right_channel_buffer[AUDIO_BUFFER_SIZE];
+
+// Tracking variables
+int16_t current_servo_angle = 90; // Start at center
+
 
 
 /* ============================== MAIN LOOP ================================= */
@@ -23,13 +47,81 @@ int main(void)
   // wrapper function to hide stm32cubeMX generated code from the main function
   stm32cubeMX_setup();
 
-  while (1){
+  // Turn on the Servo PWM Timer (Timer 2)
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 
+  // Turn on the ADC Trigger Timer (Timer 3)
+  HAL_TIM_Base_Start(&htim3);
+
+  while (1){
+    switch(system_state){
+
+      case STATE_LISTEN:
+
+        // Start the DMA transferl
+        HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_dma_buffer, TOTAL_DMA_BUFFER_SIZE);
+
+        // Sleep CPU until DMA interrupt wakes it up and changes state to COMPUTE
+        while(system_state == STATE_LISTEN); // to be improved later
+
+        break;
+
+      case STATE_COMPUTE:
+
+        // Split the raw interleaved DMA data into clean left/right channels
+        split_raw_data();
+          
+        // Call DSP_pipeline()
+
+        // Compute angle from TDOA and update current_servo_angle
+        system_state = STATE_LISTEN; // Temporary fallback until actuation is written
+        break;
+
+
+      case STATE_ACTUATE:
+        // Map angle to PWM and update TIM2 CCR1
+
+        system_state = STATE_SETTLE;
+        break;
+
+
+      case STATE_SETTLE:
+        // Non-blocking delay for servo mechanical noise
+
+        system_state = STATE_LISTEN;
+        break;
+
+
+      case STATE_OUT_OF_BOUNDS:
+        // Flash Red LED for 1.5 seconds
+        break;
+    }
   }
 }
 
+
+
+/* ============================== FUNCTIONS ================================== */
+
+static void split_raw_data(void){
+  for(uint16_t i = 0; i < AUDIO_BUFFER_SIZE; i++) {
+    left_channel_buffer[i]  = adc_dma_buffer[2 * i];
+    right_channel_buffer[i] = adc_dma_buffer[2 * i + 1];
+  }
+}
+
+
+
 /* ============================== INTERRUPT CALLBACKS ======================== */
 
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
+  if(hadc->Instance == ADC1){
+    // stop the ADC
+    HAL_ADC_Stop_DMA(hadc);
+    // update FSM state to COMPUTE
+    system_state = STATE_COMPUTE;
+  } 
+}
 
 
 
