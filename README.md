@@ -79,13 +79,13 @@ Custom PLA components including the structural mounts for the microphones, the a
 
 Because servo gears create immense acoustic noise, the system cannot listen and move at the same time. The finite state machine (FSM) runs sequentially:
 
-**`STATE_LISTEN` (Blue LED pulsing):** The servo is locked in place. The ADC+DMA pipeline is activated to record 1024 samples.
+**`STATE_LISTEN` (Blue LED):** The servo is locked in place. The ADC+DMA pipeline is activated to record 1024 samples.
 
-**`STATE_COMPUTE`(Blue LED pulsing):** Audio recording stops. The MCU applies a band-pass filter to check for human speech frequencies. If the audio passes the threshold, cross-correlation is performed to calculate the relative angle.
+**`STATE_COMPUTE`(Blue LED):** Audio recording stops. The MCU applies a band-pass filter to check for human speech frequencies. If the audio passes the threshold, cross-correlation is performed to calculate the relative angle.
 
-**`STATE_ACTUATE` (Blue LED solid):** The MCU maps the relative angle to the global coordinate frame and updates the Timer PWM duty cycle.
+**`STATE_ACTUATE` (Green LED):** The MCU maps the relative angle to the global coordinate frame and updates the Timer PWM duty cycle.
 
-**`STATE_SETTLE`(Green LED solid):** A non-blocking delay allows the mechanical vibrations of the servo to dissipate before returning to `STATE_LISTEN`.
+**`STATE_SETTLE`(Green LED):** A non-blocking delay allows the mechanical vibrations of the servo to dissipate before returning to `STATE_LISTEN`.
 
 **`STATE_OUT_OF_BOUNDS` (Red LED flashing):** Triggered when the calculated angle exceeds physical limits. The system flashes the red LED for 1.5 seconds before automatically transitioning back to `STATE_LISTEN`.
 
@@ -128,8 +128,8 @@ Because servo gears create immense acoustic noise, the system cannot listen and 
 | **Material component Description** | **Qty** | **Target application / Notes** | **Sourcing / Cost** |
 | --- | --- | --- | --- |
 | NUCLEO-U083RC Development Board | 1 | Main STM32 microcontroller unit | Lab inventory |
-| MAX4466 analog microphones | 2 | Analog microphones for capturing audio | [berrybase ↗](https://www.berrybase.de/elektretmikrofonverstaerker-gy-max4466) (€1,50 cad.)|
-| MG996R 180° servo motor | 1 | Positional actuator for rotating the sensor platform | [berrybase ↗](https://www.berrybase.de/waveshare-mg996r-servo-motor-4-8-6v-metallgetriebe-9-11kg-cm-drehmoment-1800-drehwinkel) (€6,50) |
+| MAX4466 analog microphones | 2 | Analog microphones for capturing audio | Lab inventory) |
+| SG90 180° servo motor | 1 | Positional actuator for rotating the sensor platform | Lab inventory |
 | Acoustic foam block | 1 | High-density foam sponge to block rear audio signals | Probably in the trash |
 | RGB LED | 1 | 4 pin LED for FSM state and limit reached indication | Lab inventory |
 | PLA filament (3D Printing) | 1 | Material for printing the frame, ears, and servo mounts | Lab inventory |
