@@ -38,6 +38,13 @@ static bool check_amplitude_threshold(const uint16_t* left, const uint16_t* righ
     return false; // Room is quiet
 }
 
+
+/**
+ * @brief Removes the DC component from a raw 12-bit ADC buffer by mean centering.
+ * @param[in]  input   Pointer to the raw uncentered ADC buffer.
+ * @param[out] output  Pointer to the destination buffer to store centered 16-bit signed samples.
+ * @param[in]  size    Total number of samples in the buffers.
+ */
 static void remove_dc_offset(const uint16_t* input, int16_t* output, uint16_t size) {
     uint32_t sum = 0;
     
@@ -52,6 +59,7 @@ static void remove_dc_offset(const uint16_t* input, int16_t* output, uint16_t si
         output[i] = (int16_t)input[i] - average; 
     }
 }
+
 
 /**
  * @brief Computes mathematical alignment to find the arrival delay.
@@ -97,6 +105,7 @@ static int16_t cross_correlate(const int16_t* left, const int16_t* right, uint16
     
     return best_lag;
 }
+
 
 // --- PUBLIC INTERFACE FUNCTION ---
 
