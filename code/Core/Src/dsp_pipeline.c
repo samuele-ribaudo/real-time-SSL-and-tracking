@@ -10,7 +10,7 @@
  * @param[in] size   Total number of samples in the buffers.
  * @return true if peak-to-peak amplitude exceeds noise floor, false if room is quiet.
  */
-static bool check_amplitude_threshold(const uint16_t* left, const uint16_t* right, uint16_t size) {
+static bool check_amplitude_threshold(const uint16_t* left, const uint16_t* right, uint16_t size, const uint16_t threshold) {
     // TODO:
     return true; 
 }
@@ -41,12 +41,12 @@ static int16_t cross_correlate(const uint16_t* left, const uint16_t* right, uint
 
 // --- PUBLIC INTERFACE FUNCTION ---
 
-bool DSP_pipeline(int16_t* out_sample_offset, 
+bool DSP_pipeline(int16_t* out_sample_offset, const uint16_t quiet_room_treshold,
                   const uint16_t* left_mic, const uint16_t* right_mic, 
                   const uint16_t size, const uint16_t max_sample_lag) 
 {
     // 1. Detect: check if a sound event is present in the raw audio buffers
-    if(!check_amplitude_threshold(left_mic, right_mic, size)){
+    if(!check_amplitude_threshold(left_mic, right_mic, size, quiet_room_treshold)){
         return false;
     }
 
