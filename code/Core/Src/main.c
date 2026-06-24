@@ -1,7 +1,14 @@
 #include "main.h"
+#include "cmsis_gcc.h"
 #include "config.h"
 #include "dsp_pipeline.h"
+#include "stm32u0xx_hal.h"
 #include "stm32u0xx_hal_adc.h"
+#include "stm32u0xx_hal_gpio.h"
+#include "stm32u0xx_hal_tim.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <math.h>
 
 /* Private defines -----------------------------------------------------------*/
 typedef enum {
@@ -11,6 +18,13 @@ typedef enum {
     STATE_SETTLE,
     STATE_OUT_OF_BOUNDS
 } system_state_t;
+
+typedef enum {
+    RED,
+    GREEN,
+    BLUE,
+    OFF
+} led_state_t;
 
 
 /* Setup variables -----------------------------------------------------------*/
@@ -23,20 +37,21 @@ TIM_HandleTypeDef htim3;
 
 /* Function prototypes -------------------------------------------------------*/
 static void stm32cubeMX_setup(void);
+static void set_led_state(led_state_t color);
 static void split_raw_data(void);
+static float compute_angle_offset(int16_t sample_offset);
+static void set_servo_angle(float angle);
 
 
 /* Variables -----------------------------------------------------------------*/
 // global state machine tracker
 volatile system_state_t system_state = STATE_LISTEN;
+volatile bool out_of_bound_detected = false;
 
 // audio buffers
 uint16_t adc_dma_buffer[TOTAL_DMA_BUFFER_SIZE];
 uint16_t left_channel_buffer[AUDIO_BUFFER_SIZE];
 uint16_t right_channel_buffer[AUDIO_BUFFER_SIZE];
-
-// Tracking variables
-int16_t current_servo_angle = 90; // Start at center
 
 
 
@@ -44,6 +59,12 @@ int16_t current_servo_angle = 90; // Start at center
 
 int main(void)
 {
+  // variables
+  float current_servo_angle = SERVO_CENTER_ANGLE; // Start at center
+  float angle_offset;
+  int16_t sample_offset;
+  uint32_t last_sound_time = HAL_GetTick(); // for inactivity timeout
+
   // wrapper function to hide stm32cubeMX generated code from the main function
   stm32cubeMX_setup();
 
@@ -58,43 +79,94 @@ int main(void)
 
       case STATE_LISTEN:
 
-        // Start the DMA transferl
-        HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_dma_buffer, TOTAL_DMA_BUFFER_SIZE);
+            set_led_state(BLUE);
 
-        // Sleep CPU until DMA interrupt wakes it up and changes state to COMPUTE
-        while(system_state == STATE_LISTEN); // to be improved later
+            // Start the DMA transferl
+            HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_dma_buffer, TOTAL_DMA_BUFFER_SIZE);
 
-        break;
+            // Sleep CPU until DMA interrupt wakes it up and changes state to COMPUTE
+            while(system_state == STATE_LISTEN) __WFI();
+            break;
+
 
       case STATE_COMPUTE:
 
-        // Split the raw interleaved DMA data into clean left/right channels
-        split_raw_data();
-          
-        // Call DSP_pipeline()
+            set_led_state(BLUE);
 
-        // Compute angle from TDOA and update current_servo_angle
-        system_state = STATE_LISTEN; // Temporary fallback until actuation is written
-        break;
+            // Split the raw interleaved DMA data into clean left/right channels
+            split_raw_data();
+            
+            // Call DSP pipeline and check if a sound was detected
+            if(!DSP_pipeline(&sample_offset, QUIET_ROOM_TRESHOLD , left_channel_buffer, right_channel_buffer, AUDIO_BUFFER_SIZE, MAX_SAMPLE_LAG)){
+              
+              // If no sound detected, check for inactivity timeout
+              if((HAL_GetTick() - last_sound_time > INACTIVITY_TIMEOUT) && (fabs(current_servo_angle - SERVO_CENTER_ANGLE) > 0.01f)){
+                current_servo_angle = SERVO_CENTER_ANGLE; // Set angle to center
+                last_sound_time = HAL_GetTick(); // Reset the timer so it doesn't constantly trigger
+                system_state = STATE_ACTUATE;    // Go to actuate state to move the motor
+              }
+              else system_state = STATE_LISTEN;     // Otherwise, keep listening
+              break; 
+            }
+
+            last_sound_time = HAL_GetTick(); // Update the sound tracker if a sound was detected
+
+            // Compute the angle offset
+            angle_offset = compute_angle_offset(sample_offset);
+
+            // Set the new servo angle and check for boundary conditions
+            if(current_servo_angle + angle_offset > SERVO_MAX_ANGLE){
+              current_servo_angle = SERVO_MAX_ANGLE;
+              out_of_bound_detected = true;
+            }
+            else if(current_servo_angle + angle_offset < SERVO_MIN_ANGLE){
+              current_servo_angle = SERVO_MIN_ANGLE;
+              out_of_bound_detected = true;
+            } 
+            else current_servo_angle += angle_offset;
+
+            // go to next state
+            system_state = STATE_ACTUATE;
+            break;
 
 
       case STATE_ACTUATE:
-        // Map angle to PWM and update TIM2 CCR1
 
-        system_state = STATE_SETTLE;
-        break;
+            set_led_state(GREEN);
+            
+            // update servo position
+            set_servo_angle(current_servo_angle);
+
+            // change state
+            if(out_of_bound_detected) system_state = STATE_OUT_OF_BOUNDS;
+            else system_state = STATE_SETTLE;
+            break;
 
 
       case STATE_SETTLE:
-        // Non-blocking delay for servo mechanical noise
 
-        system_state = STATE_LISTEN;
-        break;
+            // delay for servo mechanical noise
+            set_led_state(GREEN);
+            HAL_Delay(250);
+
+            system_state = STATE_LISTEN;
+            break;
 
 
       case STATE_OUT_OF_BOUNDS:
-        // Flash Red LED for 1.5 seconds
-        break;
+
+            // reset out of bound flag
+            out_of_bound_detected = false;
+            // Flash Red LED for 2 seconds
+            for(int i = 0; i < 4; i++){
+              set_led_state(RED);
+              HAL_Delay(250);
+              set_led_state(OFF);
+              HAL_Delay(250);
+            }
+            // change state
+            system_state = STATE_LISTEN;
+            break;
     }
   }
 }
@@ -103,7 +175,46 @@ int main(void)
 
 /* ============================== FUNCTIONS ================================== */
 
+/**
+* @brief change the RGB LED state
+* @param[in] color the desired color [RED, GREEN, BLUE] or [OFF] to turn it off
+* @retval none
+*/
+static void set_led_state(led_state_t color){
+  switch(color){
+    case RED:
+      HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_RESET);
+      break;
+    
+    case GREEN:
+      HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_RESET);
+      break;
+
+    case BLUE:
+      HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_SET);
+      break;
+
+    case OFF:
+      HAL_GPIO_WritePin(LED_R_GPIO_Port, LED_R_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_RESET);
+      break;
+  }
+}
+
+
+/**
+* @brief split the raw data collected by the ADC into a left and right channel buffers
+* @retval none
+*/
 static void split_raw_data(void){
+
   for(uint16_t i = 0; i < AUDIO_BUFFER_SIZE; i++) {
     left_channel_buffer[i]  = adc_dma_buffer[2 * i];
     right_channel_buffer[i] = adc_dma_buffer[2 * i + 1];
@@ -111,9 +222,57 @@ static void split_raw_data(void){
 }
 
 
+/**
+* @brief compute the angle offset of the sound source based on the number of sample
+*        offset between the two channels
+* @param[in] sample_offset the offset between the two channels recordings
+* @retval angle offset in radiants 
+*/
+static float compute_angle_offset(int16_t sample_offset){
+
+  // compute the time delay of arrival
+  float TDOA = (float) sample_offset / SAMPLE_FREQUENCY_HZ;
+
+  // compute the angle offset applying the formula seen in the lectures
+  float asin_arg = TDOA * SPEED_OF_SOUND / MIC_DISTANCE;
+
+  // clamp the computer value for safety
+  if(asin_arg > 1.0f) asin_arg = 1.0f;
+  else if(asin_arg < -1.0f) asin_arg = -1.0f;
+
+  float angle_offset = asinf(asin_arg);
+
+  return angle_offset;
+}
+
+
+/**
+* @brief set the servo motor to the desired angle within the servo limitations
+* @param[in] angle the desired angle in radiants
+* @retval none
+*/
+static void set_servo_angle(float angle){
+
+  // convert angle to PWM
+  int pwm_value = angle * (SERVO_MAX_PWM - SERVO_MIN_PWM)/(SERVO_MAX_ANGLE - SERVO_MIN_ANGLE) + SERVO_MIN_PWM;
+
+  // clamp PWM value for safety reasons
+  if(pwm_value > SERVO_MAX_PWM) pwm_value = SERVO_MAX_PWM;
+  else if(pwm_value < SERVO_MIN_PWM) pwm_value = SERVO_MIN_PWM;
+
+  // set PWM value
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, pwm_value);
+}
+
+
 
 /* ============================== INTERRUPT CALLBACKS ======================== */
 
+/**
+* @brief Conversion complete ISR invoked automatically when the ADC DMA buffer is completely filled with audio samples.
+* @param[in, out] hadc Pointer to the ADC handle structure
+* @retval none
+*/
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
   if(hadc->Instance == ADC1){
     // stop the ADC
