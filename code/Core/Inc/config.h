@@ -10,14 +10,14 @@
 // System settings
 #define INACTIVITY_TIMEOUT      5000      // Time to reset to center [ms]
 #define AUDIO_BUFFER_SIZE       1024      // Number of samples per channel
-#define SETTLING_TIME           100       // Settling time after actuation [ms]
+#define SETTLING_TIME           200       // Settling time after actuation [ms]
 
 // Hardware settings
 #define SERVO_MIN_ANGLE         0.0f      // Minimum servo angle [rad]
 #define SERVO_MAX_ANGLE         PI        // Maximum servo angle [rad]
 #define SERVO_MIN_PWM           500       // Equivalent to 500 us with  current tim2 setup      
 #define SERVO_MAX_PWM           2500      // Equivalent to 2500 us with current tim2 setup
-#define QUIET_ROOM_TRESHOLD     1000      // Minimum value for a sound to qialify as such
+#define QUIET_ROOM_TRESHOLD     1500      // Minimum value for a sound to qialify as such
 
 // Derived constants
 #define MAX_SAMPLE_LAG          ((uint16_t)((MIC_DISTANCE / SPEED_OF_SOUND) * SAMPLE_FREQUENCY_HZ) + 1)
