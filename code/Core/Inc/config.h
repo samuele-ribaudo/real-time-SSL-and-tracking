@@ -17,7 +17,7 @@
 #define SERVO_MAX_ANGLE         PI        // Maximum servo angle [rad]
 #define SERVO_MIN_PWM           500       // Equivalent to 500 us with  current tim2 setup      
 #define SERVO_MAX_PWM           2500      // Equivalent to 2500 us with current tim2 setup
-#define QUIET_ROOM_TRESHOLD     500      // Minimum value for a sound to qialify as such
+#define QUIET_ROOM_TRESHOLD     1000      // Minimum value for a sound to qialify as such
 
 // Derived constants
 #define MAX_SAMPLE_LAG          ((uint16_t)((MIC_DISTANCE / SPEED_OF_SOUND) * SAMPLE_FREQUENCY_HZ) + 1)

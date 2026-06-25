@@ -25,7 +25,7 @@ axes[0, 1].legend()
 
 # --- Bottom Left: Raw Cross-Correlation ---
 axes[1, 0].plot(corr_raw["Lag"], corr_raw["Correlation"], color='purple')
-axes[1, 0].set_title("Cross-Correlation (Raw)")
+axes[1, 0].set_title("Cross-Correlation (Raw DC Removed)")
 axes[1, 0].set_xlabel("Lag (samples)")
 axes[1, 0].set_ylabel("Correlation Magnitude")
 axes[1, 0].grid(True, linestyle='--', alpha=0.6)
