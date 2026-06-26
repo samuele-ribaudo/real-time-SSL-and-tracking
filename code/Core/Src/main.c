@@ -74,10 +74,8 @@ int main(void)
   // Turn on the ADC Trigger Timer (Timer 3)
   HAL_TIM_Base_Start(&htim3);
 
-  char boot_msg[] = "MCU Booted Successfully!\r\n";
-  extern UART_HandleTypeDef hcom_uart[];
-  HAL_UART_Transmit(&hcom_uart[COM1], (uint8_t*)boot_msg, sizeof(boot_msg)-1, 1000);
-
+  set_servo_angle(SERVO_CENTER_ANGLE);
+  HAL_Delay(6000);
 
   while (1){
     switch(system_state){
