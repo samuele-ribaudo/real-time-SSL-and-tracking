@@ -6,13 +6,10 @@
 
 // --- MATLAB OUTPUT OF resources/butterworth.m ---
 /*
---- HPF Coefficients (300 Hz) ---
-b0 = 0.97369481, b1 = -1.94738962, b2 = 0.97369481
-a1 = -1.94669754, a2 = 0.94808171
-
---- LPF Coefficients (3000 Hz) ---
-b0 = 0.02785977, b1 = 0.05571953, b2 = 0.02785977
-a1 = -1.47548044, a2 = 0.58691951
+--- Cascaded Biquad Coefficients (SOS) ---
+.b0 = 0.00357387, .b1 = 0.00714774, .b2 = 0.00357387, .a1 = 1.00000000, .a2 = -1.69527851
+.b0 = 1.00000000, .b1 = 0.00000000, .b2 = -1.00000000, .a1 = 1.00000000, .a2 = -1.62501451
+.b0 = 1.00000000, .b1 = -2.00000000, .b2 = 1.00000000, .a1 = 1.00000000, .a2 = -1.96597588
 */
 
 typedef struct {
@@ -29,7 +26,7 @@ typedef struct {
 bool check_amplitude_threshold(const uint16_t* left, const uint16_t* right, uint16_t size, const uint16_t threshold);
 void remove_dc_offset(const uint16_t *input, int16_t *output, uint16_t size);
 float process_window(float input, biquad_window *window);
-void bandpass_filter(int16_t *signal, const uint16_t size, biquad_window *hpf, biquad_window *lpf);
+void bandpass_filter(int16_t *signal, const uint16_t size, biquad_window *stages, const uint8_t num_stages);
 int16_t cross_correlate(const int16_t* left, const int16_t* right, uint16_t size, uint16_t max_lag);
 
 #endif // DSP_PIPELINE_H

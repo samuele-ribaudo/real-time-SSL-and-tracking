@@ -1,13 +1,18 @@
-fs = 50000; % 50 kHz Sampling rate
+Fs = 50000;
+Fc1 = 300;   % High-pass cutoff
+Fc2 = 3000;  % Low-pass cutoff
+N = 6;       % Filter order
 
-% 1. High-Pass filter coefficients (300 Hz cutoff)
-[b_hp, a_hp] = butter(2, 300 / (fs/2), 'high');
-fprintf('--- HPF Coefficients (300 Hz) ---\n');
-fprintf('b0 = %.8f, b1 = %.8f, b2 = %.8f\n', b_hp(1), b_hp(2), b_hp(3));
-fprintf('a1 = %.8f, a2 = %.8f\n\n', a_hp(2), a_hp(3));
+% Design the bandpass filter directly as Second-Order Sections (SOS)
+[Z, P, K] = butter(N/2, [Fc1 Fc2]/(Fs/2), 'bandpass');
+[sos, g] = zp2sos(Z, P, K);
 
-% 2. Low-pass filter coefficients (3000 Hz cutoff)
-[b_lp, a_lp] = butter(2, 3000 / (fs/2), 'low');
-fprintf('--- LPF Coefficients (3000 Hz) ---\n');
-fprintf('b0 = %.8f, b1 = %.8f, b2 = %.8f\n', b_lp(1), b_lp(2), b_lp(3));
-fprintf('a1 = %.8f, a2 = %.8f\n', a_lp(2), a_lp(3));
+% Combine the global gain 'g' into the first stage coefficients (b0, b1, b2)
+sos(1, 1:3) = sos(1, 1:3) * g;
+
+% Print coefficients formatted for C copy-pasting
+disp('--- Cascaded Biquad Coefficients (SOS) ---');
+for i = 1:size(sos,1)
+    fprintf('.b0 = %10.8f, .b1 = %10.8f, .b2 = %10.8f, .a1 = %10.8f, .a2 = %10.8f\n', ...
+            sos(i,1), sos(i,2), sos(i,3), sos(i,5), sos(i,6));
+end

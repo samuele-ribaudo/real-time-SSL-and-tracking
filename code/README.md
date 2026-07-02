@@ -4,29 +4,25 @@ This directory contains the embedded C code for the STM32 NUCLEO-U083RC microcon
 
 ## Code Structure
 
-The codebase is generated and structured using standard STM32Cube/CMake conventions:
+The codebase is generated and structured using standard STM32Cube/CMake conventions. The following tree structure details the core components implemented for our project:
 
-* **`Core/Src/` & `Core/Inc/`**: Contains the main application logic.
-  * `main.c` / `main.h`: Initialization of peripherals (ADC, DMA, TIM for PWM, GPIO) and the main super-loop handling the state machine.
-  * `dsp_pipeline.c` / `dsp_pipeline.h`: **Our custom DSP implementation.** This contains the discrete band-pass filter (approx. 300 Hz - 3000 Hz) to isolate human speech and the cross-correlation algorithm to calculate the sample offset (TDOA) between the two microphone buffers.
-  * `stm32u0xx_it.c`: Interrupt Service Routines (ISRs), specifically for DMA half-transfer and full-transfer callbacks.
-* **`Drivers/`**: Hardware Abstraction Layer (HAL) and CMSIS libraries.
-  * `STM32U0xx_HAL_Driver/`: ST's official HAL for the U0 series.
-  * `CMSIS/DSP/`: ARM Math and DSP libraries (used for optimized vector operations if applicable).
-* **`CMakeLists.txt` & `CMakePresets.json`**: Build configuration files used by the VS Code STM32 extension.
-* **`STM32U083xx_FLASH.ld` & `STM32U083xx_RAM.ld`**: Linker scripts for memory mapping.
+```text
+code/
+├── CMakeLists.txt                  # Build configuration file used by the VS Code STM32 extension
+├── Core/
+│   ├── Inc/
+│   │   ├── config.h                 # Global system parameters, thresholds, and calibration constants
+│   │   ├── dsp_pipeline.h           # Header declaring custom DSP filtering and cross-correlation functions
+│   │   └── main.h                   # Peripheral configuration macros and state machine definitions
+│   └── Src/
+│       ├── main.c                   # Main application loop, peripheral setup (ADC, DMA, TIM for PWM), and state machine
+│       └── dsp_pipeline.c           # Custom DSP pipeline (discrete 300Hz - 3000Hz band-pass filter and cross-correlation)
+├── Drivers/
+...
+```
 
-## What We Implemented
+> Note on Generated Files: all remaining files within the `Core/` directory (such as `stm32u0xx_it.c` for Interrupt Service Routines) and the entire `Drivers/` directory (containing ST's official Hardware Abstraction Layer and ARM CMSIS/DSP libraries) are standard files automatically generated and managed by **STM32CubeMX**.
 
-1. **Continuous Audio Sampling (ADC + DMA)**: Configured the ADC to read from two analog channels continuously. DMA is used to write these readings into a circular buffer in memory without blocking the CPU.
-2. **DSP Pipeline**: 
-   * **Amplitude Thresholding**: Checks if the ambient noise exceeds a "quiet room" baseline to wake the system.
-   * **Band-pass Filtering**: A custom C implementation of a discrete filter to attenuate noise outside the human vocal range.
-   * **Cross-Correlation**: Computes the correlation between the left and right audio buffers in the time domain to find the phase shift (delay).
-3. **Actuation (TIM + PWM)**: Based on the calculated delay, we map the TDOA to an azimuth angle and output a PWM signal to the SG90 servo motor to rotate the platform.
-4. **Visual Feedback (GPIO)**: If the calculated angle exceeds the 180° physical limit of the servo, an RGB LED is triggered to indicate the target is out of bounds.
-
----
 
 ## Setup, Build, and Flash Instructions
 
@@ -46,6 +42,5 @@ We use **Visual Studio Code** with the official **STM32 VS Code Extension** to b
 
 ### Flashing and Running
 1. Connect your NUCLEO-U083RC board to your PC via the mini-USB cable.
-2. In the STM32 Extension panel, under the **Run & Debug** section, click **Flash Device**. 
-3. Open a serial monitor (like PuTTY, TeraTerm, or the integrated VS Code serial monitor) set to `115200` baud rate to view debug prints (if `printf` is retargeted via UART).
-4. To debug, click **Debug Device** to flash the code and halt at `main()`. You can now step through the code, inspect variables, and view DMA buffer arrays in real-time.
+2. In the Run & Debug section, click `Run and Debug`. 
+3. Once the debugger starts, click on the arrow to skip it and flash the code onto the board

@@ -91,21 +91,20 @@ float process_window(float input, biquad_window *window){
  * @param[in] lpf       pointer to the biquad window of the high pass filter
  * @return none
  */
-void bandpass_filter(int16_t *signal, const uint16_t size, biquad_window *hpf, biquad_window *lpf){
+void bandpass_filter(int16_t *signal, const uint16_t size, biquad_window *stages, const uint8_t num_stages){
     for(int i = 0; i < size; i++){
         // convert integer sample to float
-        float input = (float) signal[i];
+        float current_sample = (float) signal[i];
 
-        // apply hig pass filter and pass its output to the low pass filter
-        float hp_output = process_window(input, hpf);
-        float output = process_window(hp_output, lpf);
+        for(uint8_t stage = 0; stage < num_stages; stage++)
+            current_sample = process_window(current_sample, &stages[stage]);
 
         // Calmping to prevent integer overflow
-        if(output > 32767.0f) output = 32767.0f;
-        if(output < -32768.0f) output = 32768.0f;
+        if(current_sample > 32767.0f) current_sample = 32767.0f;
+        if(current_sample < -32768.0f) current_sample = -32768.0f;
 
         // write the data in the output array
-        signal[i] = (int16_t) output;
+        signal[i] = (int16_t) current_sample;
     }
 }
 
