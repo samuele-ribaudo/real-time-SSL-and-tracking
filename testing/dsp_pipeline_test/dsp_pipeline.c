@@ -1,27 +1,5 @@
 #include "dsp_pipeline.h"
-#include "config.h"
 #include <stdint.h>
-#define FILTER_STAGES 3
-
-
-// --- MATLAB OUTPUT OF resources/butterworth.m ---
-/*
---- Cascaded Biquad Coefficients (SOS) ---
-    .b0 = 0.00357387, .b1 = 0.00714774, .b2 = 0.00357387, .a1 = -1.69527851, .a2 = 0.70751554
-    .b0 = 1.00000000, .b1 = 0.00000000, .b2 = -1.00000000, .a1 = -1.62501451, .a2 = 0.73868441
-    .b0 = 1.00000000, .b1 = -2.00000000, .b2 = 1.00000000, .a1 = -1.96597588, .a2 = 0.96748119
-*/
-
-
-typedef struct {
-    // filter coefficients comuted in MATLAB
-    float b0, b1, b2;
-    float a1, a2;
-
-    // history storage variavbles
-    float x1, x2;
-    float y1, y2;
-} biquad_window;
 
 
 /**
@@ -31,7 +9,7 @@ typedef struct {
  * @param[in] size   Total number of samples in the buffers.
  * @return true if peak-to-peak amplitude exceeds noise floor, false if room is quiet.
  */
-static bool check_amplitude_threshold(const uint16_t* left, const uint16_t* right, uint16_t size, const uint16_t threshold) {
+bool check_amplitude_threshold(const uint16_t* left, const uint16_t* right, uint16_t size, const uint16_t threshold) {
 
     uint16_t left_min = 4095; // Max 12-bit ADC value
     uint16_t left_max = 0;
@@ -66,7 +44,7 @@ static bool check_amplitude_threshold(const uint16_t* left, const uint16_t* righ
  * @param[out] output  pointer to the array storng the shifted data
  * @return none
  */
-static void remove_dc_offset(const uint16_t *input, int16_t *output, uint16_t size){
+void remove_dc_offset(const uint16_t *input, int16_t *output, uint16_t size){
 
     int32_t sum = 0;
     for (uint16_t i = 0; i < size; i++) {
@@ -85,7 +63,7 @@ static void remove_dc_offset(const uint16_t *input, int16_t *output, uint16_t si
  * @param[in] window  biquad window storing coefficients and memory values
  * @return the filtered output
  */
-static float process_window(float input, biquad_window *window){
+float process_window(float input, biquad_window *window){
     // compute the core difference equation
     float output = (window->b0 * input) +
                     (window->b1 * window->x1) +
@@ -109,11 +87,11 @@ static float process_window(float input, biquad_window *window){
  * @brief apply a low pass filter and an high pass filter to obtain a bandpass filter to an array
  * @param[in, out] signal   pointer to the array storng the unfiltered data, that will contain the filtered one
  * @param[in] size      length of the data arrays
- * @param[in] stages    pointer to the array of biquad windows
- * @param[in] num_stages number of biquad stages
+ * @param[in] hpf       pointer to the biquad window of the high pass filter
+ * @param[in] lpf       pointer to the biquad window of the high pass filter
  * @return none
  */
-static void bandpass_filter(int16_t *signal, const uint16_t size, biquad_window *stages, const uint8_t num_stages){
+void bandpass_filter(int16_t *signal, const uint16_t size, biquad_window *stages, const uint8_t num_stages){
     for(int i = 0; i < size; i++){
         // convert integer sample to float
         float current_sample = (float) signal[i];
@@ -130,6 +108,7 @@ static void bandpass_filter(int16_t *signal, const uint16_t size, biquad_window 
     }
 }
 
+
 /**
  * @brief Computes mathematical alignment to find the arrival delay.
  * @param[in] left     Pointer to filtered Left channel buffer.
@@ -138,7 +117,7 @@ static void bandpass_filter(int16_t *signal, const uint16_t size, biquad_window 
  * @param[in] max_lag  The physical search window limit.
  * @return The calculated index sample offset (lag value between -max_lag and +max_lag).
  */
-static int16_t cross_correlate(const int16_t* left, const int16_t* right, uint16_t size, uint16_t max_lag) {
+int16_t cross_correlate(const int16_t* left, const int16_t* right, uint16_t size, uint16_t max_lag) {
 
     int16_t best_lag = 0;
     int64_t max_correlation = -1; // Initialize to a very low number
@@ -173,53 +152,4 @@ static int16_t cross_correlate(const int16_t* left, const int16_t* right, uint16
     }
     
     return best_lag;
-}
-
-
-
-// --- PUBLIC INTERFACE FUNCTION ---
-
-bool DSP_pipeline(int16_t* out_sample_offset, const uint16_t quiet_room_treshold,
-                  const uint16_t* left_mic, const uint16_t* right_mic, 
-                  const uint16_t size, const uint16_t max_sample_lag) 
-{
-    // 1. Detect: check if a sound event is present in the raw audio buffers
-    if(!check_amplitude_threshold(left_mic, right_mic, size, quiet_room_treshold)){
-        return false; // Exit early to save CPU power
-    }
-
-    // 2. Use int16_t and static to prevent Stack Overflow
-    static int16_t left_clean[AUDIO_BUFFER_SIZE];
-    static int16_t right_clean[AUDIO_BUFFER_SIZE];
-
-    // 3. Remove dc offset
-    remove_dc_offset(left_mic, left_clean, size);
-    remove_dc_offset(right_mic, right_clean, size);
-
-    // 4. Apply band pass filter;
-
-    // initialize the biquad filter windows
-    biquad_window stages[FILTER_STAGES] = {
-        {0.00357387f, 0.00714774f, 0.00357387f, -1.69527851f, 0.70751554f, 0, 0, 0, 0},
-        {1.00000000f, 0.00000000f, -1.00000000f, -1.62501451f, 0.73868441f, 0, 0, 0, 0},
-        {1.00000000f, -2.00000000f, 1.00000000f, -1.96597588f, 0.96748119f, 0, 0, 0, 0}
-    };
-
-    // Filter left channel in-place
-    bandpass_filter(left_clean, size, stages, FILTER_STAGES);
-
-    // Reset filter states for right channel filtering
-    for (int s = 0; s < FILTER_STAGES; s++) {
-        stages[s].x1 = 0.0f; stages[s].x2 = 0.0f;
-        stages[s].y1 = 0.0f; stages[s].y2 = 0.0f;
-    }   
-
-    // Filter right channel in-place
-    bandpass_filter(right_clean, size, stages, FILTER_STAGES);
-
-
-    // 5. Correlate
-    *out_sample_offset = cross_correlate(left_clean, right_clean, size, max_sample_lag);
-
-    return true;
 }

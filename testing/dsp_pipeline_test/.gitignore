@@ -1,0 +1,23 @@
+# CMake build artifacts
+build/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+
+# Compiled executable (in case you build in-source by mistake)
+dsp_run
+
+
+# macOS system files
+.DS_Store
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+files/*
+!files/sample_1_raw.csv
