@@ -75,7 +75,7 @@ int main(void)
   HAL_TIM_Base_Start(&htim3);
 
   set_servo_angle(SERVO_CENTER_ANGLE);
-  HAL_Delay(6000);
+  HAL_Delay(BEAM_SETUP_DELAY); // Allow time for the servo to reach center position and center the beam
 
   while (1){
     switch(system_state){
@@ -168,7 +168,9 @@ int main(void)
             // reset out of bound flag
             out_of_bound_detected = false;
             // Flash Red LED for 2 seconds
-            for(int i = 0; i < 4; i++){
+            int count = OUT_OF_BOUNDS_DELAY / 500;
+            if(count < 1) count = 1; // Ensure at least one flash
+            for(int i = 0; i < count; i++){
               set_led_state(RED);
               HAL_Delay(250);
               set_led_state(OFF);
