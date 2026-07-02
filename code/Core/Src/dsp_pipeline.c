@@ -1,16 +1,14 @@
 #include "dsp_pipeline.h"
 #include <stdint.h>
+#define FILTER_STAGES 3
 
 
 // --- MATLAB OUTPUT OF resources/butterworth.m ---
 /*
---- HPF Coefficients (300 Hz) ---
-b0 = 0.97369481, b1 = -1.94738962, b2 = 0.97369481
-a1 = -1.94669754, a2 = 0.94808171
-
---- LPF Coefficients (3000 Hz) ---
-b0 = 0.02785977, b1 = 0.05571953, b2 = 0.02785977
-a1 = -1.47548044, a2 = 0.58691951
+--- Cascaded Biquad Coefficients (SOS) ---
+    .b0 = 0.00357387, .b1 = 0.00714774, .b2 = 0.00357387, .a1 = -1.69527851, .a2 = 0.70751554
+    .b0 = 1.00000000, .b1 = 0.00000000, .b2 = -1.00000000, .a1 = -1.62501451, .a2 = 0.73868441
+    .b0 = 1.00000000, .b1 = -2.00000000, .b2 = 1.00000000, .a1 = -1.96597588, .a2 = 0.96748119
 */
 
 
@@ -110,28 +108,26 @@ static float process_window(float input, biquad_window *window){
  * @brief apply a low pass filter and an high pass filter to obtain a bandpass filter to an array
  * @param[in, out] signal   pointer to the array storng the unfiltered data, that will contain the filtered one
  * @param[in] size      length of the data arrays
- * @param[in] hpf       pointer to the biquad window of the high pass filter
- * @param[in] lpf       pointer to the biquad window of the high pass filter
+ * @param[in] stages    pointer to the array of biquad windows
+ * @param[in] num_stages number of biquad stages
  * @return none
  */
-static void bandpass_filter(int16_t *signal, const uint16_t size, biquad_window *hpf, biquad_window *lpf){
+static void bandpass_filter(int16_t *signal, const uint16_t size, biquad_window *stages, const uint8_t num_stages){
     for(int i = 0; i < size; i++){
         // convert integer sample to float
-        float input = (float) signal[i];
+        float current_sample = (float) signal[i];
 
-        // apply hig pass filter and pass its output to the low pass filter
-        float hp_output = process_window(input, hpf);
-        float output = process_window(hp_output, lpf);
+        for(uint8_t stage = 0; stage < num_stages; stage++)
+            current_sample = process_window(current_sample, &stages[stage]);
 
         // Calmping to prevent integer overflow
-        if(output > 32767.0f) output = 32767.0f;
-        if(output < -32768.0f) output = 32768.0f;
+        if(current_sample > 32767.0f) current_sample = 32767.0f;
+        if(current_sample < -32768.0f) current_sample = -32768.0f;
 
         // write the data in the output array
-        signal[i] = (int16_t) output;
+        signal[i] = (int16_t) current_sample;
     }
 }
-
 
 /**
  * @brief Computes mathematical alignment to find the arrival delay.
@@ -201,25 +197,24 @@ bool DSP_pipeline(int16_t* out_sample_offset, const uint16_t quiet_room_treshold
 
     // 4. Apply band pass filter;
 
-    // a. Initialize High-Pass filter
-    biquad_window hpf = {
-        .b0 = 0.97369481, .b1 = -1.94738962, .b2 = 0.97369481,
-        .a1 = -1.94669754, .a2 = 0.94808171,
-        .x1 = 0.0f, .x2 = 0.0f, .y1 = 0.0f, .y2 = 0.0f
+    // initialize the biquad filter windows
+    biquad_window stages[FILTER_STAGES] = {
+        {0.00357387f, 0.00714774f, 0.00357387f, -1.69527851f, 0.70751554f, 0, 0, 0, 0},
+        {1.00000000f, 0.00000000f, -1.00000000f, -1.62501451f, 0.73868441f, 0, 0, 0, 0},
+        {1.00000000f, -2.00000000f, 1.00000000f, -1.96597588f, 0.96748119f, 0, 0, 0, 0}
     };
 
-    // b. Initialize Low-Pass filter
-    biquad_window lpf = {
-        .b0 = 0.02785977, .b1 = 0.05571953, .b2 = 0.02785977,
-        .a1 = -1.47548044, .a2 = 0.58691951,
-        .x1 = 0.0f, .x2 = 0.0f, .y1 = 0.0f, .y2 = 0.0f
-    };
+    // Filter left channel in-place
+    bandpass_filter(left_clean, size, stages, FILTER_STAGES);
 
-    // c. apply the filtering
-    bandpass_filter(left_clean, size, &hpf, &lpf);
-    hpf.x1 = 0; hpf.x2 = 0; hpf.y1 = 0; hpf.y2 = 0; // reset the window
-    lpf.x1 = 0; lpf.x2 = 0; lpf.y1 = 0; lpf.y2 = 0;
-    bandpass_filter(right_clean, size, &hpf, &lpf);
+    // Reset filter states for right channel filtering
+    for (int s = 0; s < FILTER_STAGES; s++) {
+        stages[s].x1 = 0.0f; stages[s].x2 = 0.0f;
+        stages[s].y1 = 0.0f; stages[s].y2 = 0.0f;
+    }   
+
+    // Filter right channel in-place
+    bandpass_filter(right_clean, size, stages, FILTER_STAGES);
 
 
     // 5. Correlate
