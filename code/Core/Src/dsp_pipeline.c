@@ -1,4 +1,5 @@
 #include "dsp_pipeline.h"
+#include "config.h"
 #include <stdint.h>
 #define FILTER_STAGES 3
 
@@ -188,8 +189,8 @@ bool DSP_pipeline(int16_t* out_sample_offset, const uint16_t quiet_room_treshold
     }
 
     // 2. Use int16_t and static to prevent Stack Overflow
-    static int16_t left_clean[1024];
-    static int16_t right_clean[1024];
+    static int16_t left_clean[AUDIO_BUFFER_SIZE];
+    static int16_t right_clean[AUDIO_BUFFER_SIZE];
 
     // 3. Remove dc offset
     remove_dc_offset(left_mic, left_clean, size);
