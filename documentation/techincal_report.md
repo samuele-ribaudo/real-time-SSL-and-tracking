@@ -45,8 +45,43 @@ Three standard GPIO output pins are mapped to the onboard RGB LED. This provides
 ---
 
 ## 3. Application logic (Samuele)
-- **Code Structure:** Use of the `stm32cubeMX_setup(void)` wrapper for a cleaner `main.c` and `config.h` for compile-time parameters.
-- **State Machine:** Justification for using an FSM to prevent mechanical noise interference and a brief overview of its implementation.
+
+### 3.1 Codebase organization
+
+To organize the auto-generated STM32CubeMX code, we moved all hardware initialization into a single `stm32cubeMX_setup(void)` wrapper function and we removed all the unnecessary comments, keeping `main.c` clean. Additionally, we created a `config.h` file to store all tunable parameters and physical constants in one place, making it easy to adjust system settings at compile time.
+
+To maintain a clean and readable main loop, we abstracted key operations into dedicated helper functions for LED control, audio data splitting, angle computation, and servo actuation.
+
+
+### 3.2 Finite State Machine (FSM)
+
+Because servo gears create acoustic noise, the system cannot listen and move at the same time. To address this limitation, the system relies on a strict, sequential FSM:
+
+```mermaid
+stateDiagram-v2
+    [*] --> STATE_LISTEN
+    STATE_LISTEN --> STATE_COMPUTE : DMA buffer full
+    STATE_COMPUTE --> STATE_ACTUATE : Sound detected OR Inactivity timeout
+    STATE_COMPUTE --> STATE_LISTEN : No sound AND Timeout not reached
+    STATE_ACTUATE --> STATE_OUT_OF_BOUNDS : Out-of-bounds flag set
+    STATE_ACTUATE --> STATE_SETTLE : Movement within bounds
+    STATE_SETTLE --> STATE_LISTEN : Mechanical delay finished
+    STATE_OUT_OF_BOUNDS --> STATE_LISTEN : Flashing finished
+```
+> Figure: State transition diagram for the acoustic localization and tracking pipeline.
+
+* `STATE_LISTEN` (Blue): The servo is locked while the ADC+DMA pipeline records 1024 audio samples. Once the buffer is full, the DMA interrupt wakes the CPU and transitions the system to the compute phase.
+
+* `STATE_COMPUTE` (Blue): Recording halts and the raw data is split and passed through the DSP pipeline.
+    * If a sound is detected, the system calculates the angle offset, applies it to the current angle (flagging if it exceeds physical limits), and moves to `STATE_ACTUATE`.
+    * If no sound is detected, the system checks an inactivity timeout. If the silence exceeds the maximum allowed time and the servo is not already centered, it targets the center position and moves to `STATE_ACTUATE`. Otherwise, it simply rolls back to `STATE_LISTEN`.
+
+
+* `STATE_ACTUATE` (Green): The MCU updates the servo's position. If an out-of-bounds value was flagged during computation, the FSM transitions directly to `STATE_OUT_OF_BOUNDS`. If the movement is within normal limits, it proceeds to `STATE_SETTLE`.
+
+* `STATE_SETTLE` (Green): A brief, blocking delay allows all mechanical servo vibrations to dissipate before the system safely loops back to `STATE_LISTEN`.
+
+* `STATE_OUT_OF_BOUNDS` (Red Flash): The out-of-bounds flag is cleared, and the system flashes the red LED to provide a visual warning that the target exceeded the 180° physical limit. Once the flashing sequence finishes, it returns to `STATE_LISTEN`.
 
 ---
 
