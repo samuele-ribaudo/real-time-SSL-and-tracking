@@ -15,7 +15,7 @@ Using an STM32 microcontroller and two standard microphones, the system acts lik
 
 ## 2. MCU Configuration (Samuele)
 
-> The Nucleo board was configured via the STM32CubeMX visual configurator to generate the base C project. Complete peripheral settings are detailed in [section 6 of the repository's REEADME](https://github.com/samuele-ribaudo/real-time-SSL-and-tracking/blob/main/README.md)
+> The Nucleo board was configured via the STM32CubeMX visual configurator to generate the base C project. Complete peripheral settings are detailed in [section 6 of the repository's README](https://github.com/samuele-ribaudo/real-time-SSL-and-tracking/blob/main/README.md)
 
 
 ### 2.1 Sampling frequency and ADC triggering (Timer 3)
