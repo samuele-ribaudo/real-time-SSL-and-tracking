@@ -59,10 +59,11 @@ Because servo gears create acoustic noise, the system cannot listen and move at 
 
 ```mermaid
 stateDiagram-v2
+    direction LR
     [*] --> STATE_LISTEN
     STATE_LISTEN --> STATE_COMPUTE : DMA buffer full
-    STATE_COMPUTE --> STATE_ACTUATE : Sound detected OR Inactivity timeout
-    STATE_COMPUTE --> STATE_LISTEN : No sound AND Timeout not reached
+    STATE_COMPUTE --> STATE_ACTUATE : Sound detected OR<br>Inactivity timeout
+    STATE_COMPUTE --> STATE_LISTEN : No sound AND<br>Timeout not reached
     STATE_ACTUATE --> STATE_OUT_OF_BOUNDS : Out-of-bounds flag set
     STATE_ACTUATE --> STATE_SETTLE : Movement within bounds
     STATE_SETTLE --> STATE_LISTEN : Mechanical delay finished
