@@ -59,14 +59,21 @@ Because servo gears create acoustic noise, the system cannot listen and move at 
 
 ```mermaid
 stateDiagram-v2
-    direction LR
+    direction TB
+    
     [*] --> STATE_LISTEN
+    
+    %% Forward flow
     STATE_LISTEN --> STATE_COMPUTE : DMA buffer full
     STATE_COMPUTE --> STATE_ACTUATE : Sound detected OR<br>Inactivity timeout
-    STATE_COMPUTE --> STATE_LISTEN : No sound AND<br>Timeout not reached
-    STATE_ACTUATE --> STATE_OUT_OF_BOUNDS : Out-of-bounds flag set
-    STATE_ACTUATE --> STATE_SETTLE : Movement within bounds
-    STATE_SETTLE --> STATE_LISTEN : Mechanical delay finished
+    
+    %% Branching out of ACTUATE
+    STATE_ACTUATE --> STATE_OUT_OF_BOUNDS : Out-of-bounds<br>flag set
+    STATE_ACTUATE --> STATE_SETTLE : Movement<br>within bounds
+    
+    %% Return paths (Grouped visually)
+    STATE_COMPUTE --> STATE_LISTEN : No sound AND<br>Timeout pending
+    STATE_SETTLE --> STATE_LISTEN : Mechanical delay<br>finished
     STATE_OUT_OF_BOUNDS --> STATE_LISTEN : Flashing finished
 ```
 > Figure: State transition diagram for the acoustic localization and tracking pipeline.
