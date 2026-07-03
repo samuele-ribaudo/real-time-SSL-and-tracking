@@ -128,13 +128,6 @@ int main(void)
             } 
             else current_servo_angle += angle_offset;
 
-            // DEBUG
-            
-            char boot_msg[] = "MCU Booted Successfully!\r\n";
-            extern UART_HandleTypeDef hcom_uart[];
-            HAL_UART_Transmit(&hcom_uart[COM1], (uint8_t*)boot_msg, sizeof(boot_msg)-1, 1000);
-
-
             // go to next state
             system_state = STATE_ACTUATE;
             break;
