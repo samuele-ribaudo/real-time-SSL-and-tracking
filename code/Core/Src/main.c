@@ -160,7 +160,7 @@ int main(void)
 
             // reset out of bound flag
             out_of_bound_detected = false;
-            // Flash Red LED for 2 seconds
+            // Flash Red LED for OUT_OF_BOUNDS_DELAY
             int count = OUT_OF_BOUNDS_DELAY / 500;
             if(count < 1) count = 1; // Ensure at least one flash
             for(int i = 0; i < count; i++){
