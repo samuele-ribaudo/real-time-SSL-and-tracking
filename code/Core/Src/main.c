@@ -253,9 +253,10 @@ static float compute_angle_offset(int16_t sample_offset){
 
 
 /**
-* @brief set the servo motor to the desired angle within the servo limitations
-* @param[in] angle the desired angle in radiants
-* @retval none
+* @brief set the servo motor to the desired angle within the servo limitations at a controlled speed
+* @param[in] target_angle the desired target angle in radians
+* @param[in] current_angle the current angle of the servo in radians
+* @retval the updated current servo angle in radians
 */
 static float set_servo_angle(float target_angle, float current_angle){
 
