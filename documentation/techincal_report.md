@@ -22,12 +22,12 @@ Using an STM32 microcontroller and two standard microphones, the system acts lik
 
 One of the first challenges was determining the optimal microphone sampling frequency, balancing spatial resolution with physical memory constraints.
 
-Given a microphones distance of `d = 0.15 m`, and a speed of sound `v = 343 m/s`, the maximum time delay between channes is `Δt_max = d / v ≈ 437 us`. A standard `16 kHz` audio sampling rate (`t_s = 62.5 us`) yelsd a maximum offset of `437 / 62.5 ≈ 7` samples on each side, for a total range of 14 samples, limiting  our servo angular resolution to a coarse `13°` (180° / 14). To achieve finer angular control, a higher sampling frequency was required.
+Given a microphones distance of `d = 0.15 m`, and a speed of sound `v = 343 m/s`, the maximum time delay between channes is `Δt_max = d / v ≈ 437 us`. A standard 16 kHz audio sampling rate (`t_s = 62.5 us`) yelsd a maximum offset of `437 / 62.5 ≈ 7` samples on each side, for a total range of 14 samples, limiting  our servo angular resolution to a coarse 13° (180° / 14). To achieve finer angular control, a higher sampling frequency was required.
 
-However, our memory limits us to 1024-sample buffers. Extremely high sampling rates (e.g., `1 MHz`) would fill the buffer in approximately `1 ms`. This short recording window causes two major issues: the lower frequencies of human speech cannot be properly captured for the DSP pipeline (e.g., a `300 Hz` wave requires `≈ 3.3 ms` for a full period), and there is a high risk of only capturing the silences between spoken letters.
+However, our memory limits us to 1024-sample buffers. Extremely high sampling rates (e.g., 1 MHz) would fill the buffer in approximately 1 ms. This short recording window causes two major issues: the lower frequencies of human speech cannot be properly captured for the DSP pipeline (e.g., a 300 Hz wave requires ≈ 3.3 ms for a full period), and there is a high risk of only capturing the silences between spoken letters.
 
-To find the sweet spot between accurate fine-grained servo positioning and sufficient audio recording length, we settled on a sampling frequency of `50 kHz`. This yields an audio track of approximately `20 ms`, which is long enough to capture about six full wave periods of human voice at`300 Hz`, while drastically improving the angular resolution to approximately `4°`.
-Based on these considerations, Timer 3 was configured to trigger the ADC conversions at a `50 kHz` frequency.
+To find the sweet spot between accurate fine-grained servo positioning and sufficient audio recording length, we settled on a sampling frequency of 50 kHz. This yields an audio track of approximately 20 ms, which is long enough to capture about six full wave periods of human voice at 300 Hz, while drastically improving the angular resolution to approximately 4°.
+Based on these considerations, Timer 3 was configured to trigger the ADC conversions at a 50 kHz frequency.
 
 ### 2.2 Analog-to-Digital Converter (ADC) & DMA
 
