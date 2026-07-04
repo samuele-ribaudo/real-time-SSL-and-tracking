@@ -47,6 +47,7 @@ To overcome the processing limitations of the micro controller and the physical 
 | 180° servo motor | 1 | The mechanical actuator that rotates the sensor frame. |
 | Acoustic foam block | 1 | High-density foam sponge to block rear audio signals. |
 | RGB LED | 1 | A 4 pin RGB LED that provides real-time visual feedback of the state machine. It acts as a crucial flag for modular robotic design, flashing red when the target escapes the 180° physical field of hearing to trigger a "handoff" to a theoretical humanoid torso. |
+| 330 Ohm resistor | 3 | Resistors placed in series with the RGB LED channels to prevent overcurrent damage. |
 | PLA filament (3D Printing) | 1 | Material for printing the frame, board and servo mounts. |
 | Assorted wires | 1 | General circuit routing and power distribution. |
 

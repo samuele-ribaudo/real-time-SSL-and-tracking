@@ -104,15 +104,50 @@ stateDiagram-v2
 ---
 
 ## 6. Signal filtering & testing framework (Samuele)
-- **Testing Framework:** Data collection for microphone validation, quiet room thresholding, and DSP pipeline testing.
-- **Signal Filtering:** 
-  - Initial attempt: 2nd-order Butterworth (LP + HP) failure *(insert testing framework image here)*.
-  - Final approach: 6th-order bandpass filter via MATLAB *(insert voice + 100Hz/6000Hz noise image here)*.
+
+### 6.1 Microphone validation & data collection
+
+To validate our Sound Source Localization (SSL) algorithms, we developed a data collection framework (`testing/microphone_data_collector`). We recorded baseline audio tracks from the analog microphones in a quiet room, and with a human voice originating from the left, center, and right. These recordings allowed us to verify synchronous audio capture, physically adjust the MAX4466 hardware gain, and establish a reliable "quiet room" amplitude threshold to keep the finite state machine idle during silence.
+
+### 6.2 Python ground truth & C/C++ DSP verification
+
+Once the baseline was established, we introduced complex environmental disturbances into our recordings. We captured new voice samples from various angles while simultaneously playing a 100 Hz low-frequency hum and a 6 kHz high-frequency noise. These noisy samples were first processed using Python DSP libraries to establish a mathematical ground truth.
+
+Then we built a standalone C-based DSP testing framework (`testing/dsp_pipeline_test`). It ingests the raw CSV data, processes it through our custom C/C++ pipeline, and exports the results. A Python script (`plot_audio.py`) visualized these outputs, allowing us to benchmark our embedded C algorithms against the Python ground truth before flashing the code to the STM32.
+
+### 6.3 Filter design and iterations
+The pipeline relies on a bandpass filter to isolate human speech (approximately 300 Hz to 3000 Hz). We initially implemented a 2nd-order biquad filter, using MATLAB's `butter` function to generate the coefficients. However, testing revealed this lacked the steep roll-off required. The 6 kHz high-frequency disturbance was not attenuated enough, passing through the filter and severely corrupting the cross-correlation stage. This produced a sparse, noisy array with ambiguous peaks, causing the system to calculate incorrect time delays. 
+
+To resolve this, we upgraded the architecture to a 6th-order Butterworth filter, again utilizing MATLAB to compute the cascaded coefficients. This filter yielded highly satisfactory results, successfully suppressing both the 100 Hz and 6 kHz disturbances. As shown below, the filter effectively flattens the noise floor in a quiet room:
+
+![filtering](utils/analysis_baseline.png)
+
+> Figure: unfiltered quiet room recording with 100 Hz and 6 kHz disturbances (top) and the resulting flattened noise floor after 6th-order bandpass filtering (bottom).
 
 ---
 
 ## 7. DSP pipeline (Ryan)
 - **Acoustic Math:** Threshold check and time-domain cross-correlation algorithm for TDOA.
+
+
+
+
+
+### 7.something DSP pipeline validation
+
+The DSP pipeline is fully functional. With the environmental noise successfully attenuated, the cross-correlation of the filtered signals produces a singular, well-defined peak, allowing the system to accurately actuate the servo motor.
+
+![cross correlation](utils/analysis_right.png)
+
+> Figure: Validation of the working pipeline during a right-side sound test. It displays the unfiltered raw audio tracks with disturbances (top), the cleanly filtered signals between 300 Hz and 3000 Hz (middle), and the resulting cross-correlation (bottom) demonstrating a well-defined peak at a 24-sample lag for precise TDOA calculation.
+
+### 7.something+1 TDOA and angle calculation
+
+The calculation of the sound source's angle is handled by the `compute_angle_offset()` function. Once the time delay `Δt` is derived from the sample offset, calculating the relative azimuth angle `θ` is a straightforward application of the following geometric formula:
+
+$$\theta = \arcsin\left(\frac{\Delta t \cdot v}{d}\right)$$
+
+Even though harder to read, we deliberately chose to perform and maintain all angular calculations in radians. Because the standard C math library's `asinf()` function inherently returns a value in radians, using radians as our system's base unit of measure (e.g., defining the `SERVO_MAX_ANGLE` directly as π) allows us to avoid the unnecessary computational overhead that would be required to convert the values into degrees.
 
 ---
 
