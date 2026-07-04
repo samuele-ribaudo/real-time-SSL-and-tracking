@@ -95,6 +95,7 @@ stateDiagram-v2
 
 ## 4. CAD design (Ryan)
 - **CAD Design:** Iterations and 3D printing challenges.
+- maybe here add a screenshot of the solidworks prject with all the pieces toghether (also import the servo motor, led, board and microphones) to show that the cad design was identical to the actual robot.
 
 ---
 
