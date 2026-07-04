@@ -143,7 +143,7 @@ The DSP pipeline is fully functional. With the environmental noise successfully 
 
 ### 7.something+1 TDOA and angle calculation
 
-The calculation of the sound source's angle is handled by the `compute_angle_offset()` function. Once the time delay `Δt` is derived from the sample offset, calculating the relative azimuth angle `θ` is a straightforward application of the following geometric formula:
+The calculation of the sound source's angle is handled by the `compute_angle_offset()` function defined insize `code/Core/Src/main.c`. Once the time delay `Δt` is derived from the sample offset, calculating the relative azimuth angle `θ` is a straightforward application of the following geometric formula:
 
 $$\theta = \arcsin\left(\frac{\Delta t \cdot v}{d}\right)$$
 
