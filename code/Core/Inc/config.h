@@ -11,10 +11,11 @@
 #define INACTIVITY_TIMEOUT      5000      // Time to reset to center [ms]
 #define AUDIO_BUFFER_SIZE       1024      // Number of samples per channel
 #define SETTLING_TIME           100       // Settling time after actuation [ms]
-#define BEAM_SETUP_DELAY        3000      // Delay after boot to allow for servo setup [ms]
+#define BEAM_SETUP_DELAY        5000      // Delay after boot to allow for servo setup [ms]
 #define OUT_OF_BOUNDS_DELAY     1000      // Delay after out of bounds detection [ms]
 
 // Hardware settings
+#define SERVO_SPEED             1.0f      // Servo speed reduction factor [0.0 - 1.0]. if 1.0 the servo moves at max speed
 #define SERVO_MIN_ANGLE         0.0f      // Minimum servo angle [rad]
 #define SERVO_MAX_ANGLE         PI        // Maximum servo angle [rad]
 #define SERVO_MIN_PWM           500       // Equivalent to 500 us with  current tim2 setup      
