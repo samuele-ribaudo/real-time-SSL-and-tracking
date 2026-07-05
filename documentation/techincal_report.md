@@ -113,7 +113,7 @@ For the CAD design, we started with a first sketch and then bring it into 3-dime
 ---
 
 ## 5. Hardware fabrication (Ryan)
-In order to connect everything together, we uses jumper cable with breadboard at first. Then we decided to solder common grounds and VCC together so that we only have one cable connecting every component for each. We also embedded 330 Ohm resistors inside the wires for LED. With this modification, we could remove the need of using an extern breadboard which would make the sytem bulky in comparison. 
+In order to connect everything together, we uses jumper cable with breadboard at first. Then we decided to solder common grounds and VCC together so that we only have one cable connecting every component for each. We also embedded 330 Ohm resistors inside the wires that go to the RGB LED channels to prevent overcurrent damage. With this modification, we could remove the need of using an extern breadboard which would make the sytem bulky in comparison.
 
 Another issue we had is the servo motor. The servo motor was pertubating aggresively every time the bar reach the center point of the orientation which is 90 degree facing forward. After consulting with our supervisor, we decided to use a brand new servo motor. The new servo motor was working well at first, but then after extensive testing, the pertubations started to become visible again. We suspect that this could be due to the voltage source of the servo motor.
 
