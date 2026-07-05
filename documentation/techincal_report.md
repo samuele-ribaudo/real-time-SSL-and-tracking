@@ -94,12 +94,19 @@ stateDiagram-v2
 ---
 
 ## 4. CAD design
-- For the CAD design, we started with a first sketch and then bring it into 3-dimensional space with Solidworks. The first design was a proof of concept so that we could be sure that the system could actually be implemented physically and all the components could be connected functionally with each other. Once the first design has been materialized and our first prototype was fully functional, we switch our focus on the aesthetic aspect of the design to make look cooler instead of just square edges everywhere. In the first design, the cables connection were quite messy, so we decided to hide them away in the bar as this will give the system a much cleaner look.
+- For the CAD design, we started with a first sketch and then bring it into 3-dimensional space with Solidworks. The first design was a proof of concept so that we could be sure that the system could actually be implemented physically and all the components could be connected functionally with each other. We started designing the system with a rough estimate of the measurements because we did not have the components yet. After receiving the components, we had to implement the correct measurements in our design. so that Once the first design has been materialized and our first prototype was fully functional, we switch our focus on the aesthetic aspect of the design to make look cooler instead of just square edges everywhere. In the first design, the cables connection were quite messy, so we decided to hide them away in the bar as this will give the system a much cleaner look.
 
 ![cad_design](utils/sketch1.png)
 ![cad_design](utils/sketch2.png)
 ![cad_design](utils/sketch3.png)
 
+> Figure: Initial sketches and brainstorming
+
+![cad_design](utils/initial_design.png)
+> Figure: Initial design without the correct measurement
+
+![cad_design](utils/final_design.png)
+> Figure: Final design
 
 ---
 
