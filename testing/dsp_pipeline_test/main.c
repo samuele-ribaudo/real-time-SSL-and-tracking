@@ -4,7 +4,7 @@
 #include "dsp_pipeline.h"
 
 #define SIZE 1024
-#define MAX_LAG 50
+#define MAX_LAG 22
 #define FILTER_STAGES 3
 
 void save_correlation_to_csv(const char* filename, const int16_t* left, const int16_t* right, uint16_t size, int16_t max_lag) {
