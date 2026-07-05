@@ -93,9 +93,13 @@ stateDiagram-v2
 
 ---
 
-## 4. CAD design (Ryan)
-- **CAD Design:** Iterations and 3D printing challenges.
-- maybe here add a screenshot of the solidworks prject with all the pieces toghether (also import the servo motor, led, board and microphones) to show that the cad design was identical to the actual robot.
+## 4. CAD design
+- For the CAD design, we started with a first sketch and then bring it into 3-dimensional space with Solidworks. The first design was a proof of concept so that we could be sure that the system could actually be implemented physically and all the components could be connected functionally with each other. Once the first design has been materialized and our first prototype was fully functional, we switch our focus on the aesthetic aspect of the design to make look cooler instead of just square edges everywhere. In the first design, the cables connection were quite messy, so we decided to hide them away in the bar as this will give the system a much cleaner look.
+
+![cad_design](utils/sketch1.png)
+![cad_design](utils/sketch2.png)
+![cad_design](utils/sketch3.png)
+
 
 ---
 
