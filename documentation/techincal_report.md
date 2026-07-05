@@ -187,4 +187,11 @@ Even though harder to read, we deliberately chose to perform and maintain all an
 ---
 
 ## 8. Conclusions
-- Results, problems encountered, and potential future improvements.
+
+The development of the Real-Time Sound Source Localization and Tracking System yielded highly satisfactory results. The custom DSP pipeline executes entirely on the MCU and works exceptionally well to accurately calculate the Time Delay of Arrival (TDOA).
+
+While the core acoustic and computational goals were achieved, we identified the following areas for future improvement:
+
+* **Robust actuation:** Switching to a more powerful, metal-geared servo motor to prevent the continuous mechanical breakdowns experienced during testing.
+
+* **Dedicated power supply:** Adding an external 5V power source for the servo motor to prevent it from drawing excessive current from the board, directly addressing the voltage fluctuations and instability observed during actuation.
