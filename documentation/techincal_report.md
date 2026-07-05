@@ -111,7 +111,9 @@ stateDiagram-v2
 ---
 
 ## 5. Hardware fabrication (Ryan)
-- **Fabrication:** Wiring decisions (soldering common grounds/VCC), embedding 330 Ohm resistors inside the wires for LEDs, broken servo motor, need to use the foam baffles.
+In order to connect everything together, we uses jumper cable with board at first. Then we decided to solder common grounds and VCC together so that we only have one cable connecting every component for each. We also embedded 330 Ohm resistors inside the wires for LED. With this modification, we could remove the need of using an electirc board which be bulky in comparison. 
+
+Another issue we had is the servo motor. The servo motor was pertubating aggresively every time the bar reach the center point of the orientation which is 90 degree facing forward. After consulting with Rogelio, we decided to use a brand new servo motor. The new servo motor was working well at first, but then after extensive testing, the pertubations started to become visible again. We suspect that this could be due to the voltage source of the servo motor. 
 
 ---
 
