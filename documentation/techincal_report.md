@@ -147,7 +147,7 @@ To resolve this, we upgraded the architecture to a 6th-order Butterworth filter,
 
 
 
-### 7.something DSP pipeline validation
+### 7.2 Pipeline validation
 
 The DSP pipeline is fully functional. With the environmental noise successfully attenuated, the cross-correlation of the filtered signals produces a singular, well-defined peak, allowing the system to accurately actuate the servo motor.
 
@@ -155,7 +155,7 @@ The DSP pipeline is fully functional. With the environmental noise successfully 
 
 > Figure: Validation of the working pipeline during a right-side sound test. It displays the unfiltered raw audio tracks with disturbances (top), the cleanly filtered signals between 300 Hz and 3000 Hz (middle), and the resulting cross-correlation (bottom) demonstrating a well-defined peak at a 24-sample lag for precise TDOA calculation.
 
-### 7.something+1 TDOA and angle calculation
+### 7.3 TDOA and angle calculation
 
 The calculation of the sound source's angle is handled by the `compute_angle_offset()` function defined insize `code/Core/Src/main.c`. Once the time delay `Δt` is derived from the sample offset, calculating the relative azimuth angle `θ` is a straightforward application of the following geometric formula:
 
