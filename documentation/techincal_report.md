@@ -94,18 +94,18 @@ stateDiagram-v2
 ---
 
 ## 4. CAD design
-- For the CAD design, we started with a first sketch and then bring it into 3-dimensional space with Solidworks. The first design was a proof of concept so that we could be sure that the system could actually be implemented physically and all the components could be connected functionally with each other. We started designing the system with a rough estimate of the measurements because we did not have the components yet. After receiving the components, we had to implement the correct measurements in our design. so that Once the first design has been materialized and our first prototype was fully functional, we switch our focus on the aesthetic aspect of the design to make look cooler instead of just square edges everywhere. In the first design, the cables connection were quite messy, so we decided to hide them away in the bar as this will give the system a much cleaner look.
+For the CAD design, we started with a first sketch and then bring it into 3-dimensional space with Solidworks. The first design was a proof of concept so that we could be sure that the system could actually be implemented physically and all the components could be connected functionally with each other. We started designing the system with a rough estimate of the measurements because we did not have the components yet. After receiving the components, we had to implement the correct measurements in our design. so that Once the first design has been materialized and our first prototype was fully functional, we switch our focus on the aesthetic aspect of the design to make look cooler instead of just square edges everywhere. In the first design, the cables connection were quite messy, so we decided to hide them away in the bar as this will give the system a much cleaner look.
 
 <div style="display: flex; gap: 10px;">
-  <img src="utils/sketch1.png" alt="sketch1" width="45%" />
-  <img src="utils/sketch2.png" alt="sketch2" width="45%" />
+  <img src="utils/sketch1.png" alt="sketch1" width="49%" />
+  <img src="utils/sketch2.png" alt="sketch2" width="49%" />
 </div>
 
 > Figure: Initial sketches and brainstorming
 
 <div style="display: flex; gap: 10px;">
-  <img src="utils/initial_design.png" alt="initial design" width="45%" />
-  <img src="utils/final_design.png" alt="final design" width="45%" />
+  <img src="utils/initial_design.png" alt="initial design" width="49%" />
+  <img src="utils/final_design.png" alt="final design" width="49%" />
 </div>
 
 
