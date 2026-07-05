@@ -96,24 +96,26 @@ stateDiagram-v2
 ## 4. CAD design
 - For the CAD design, we started with a first sketch and then bring it into 3-dimensional space with Solidworks. The first design was a proof of concept so that we could be sure that the system could actually be implemented physically and all the components could be connected functionally with each other. We started designing the system with a rough estimate of the measurements because we did not have the components yet. After receiving the components, we had to implement the correct measurements in our design. so that Once the first design has been materialized and our first prototype was fully functional, we switch our focus on the aesthetic aspect of the design to make look cooler instead of just square edges everywhere. In the first design, the cables connection were quite messy, so we decided to hide them away in the bar as this will give the system a much cleaner look.
 
-![cad_design](utils/sketch1.png)
-![cad_design](utils/sketch2.png)
-![cad_design](utils/sketch3.png)
+<div style="display: flex; gap: 10px;">
+  <img src="utils/sketch1.png" alt="sketch1" width="45%" />
+  <img src="utils/sketch2.png" alt="sketch2" width="45%" />
+</div>
 
 > Figure: Initial sketches and brainstorming
 
-![cad_design](utils/initial_design.png)
-> Figure: Initial design without the correct measurement
+<div style="display: flex; gap: 10px;">
+  <img src="utils/initial_design.png" alt="initial design" width="45%" />
+  <img src="utils/final_design.png" alt="final design" width="45%" />
+</div>
 
-![cad_design](utils/final_design.png)
-> Figure: Final design
 
+> Figure: Left: Initial design without correct measurements. Right: Final design.
 ---
 
 ## 5. Hardware fabrication (Ryan)
-In order to connect everything together, we uses jumper cable with board at first. Then we decided to solder common grounds and VCC together so that we only have one cable connecting every component for each. We also embedded 330 Ohm resistors inside the wires for LED. With this modification, we could remove the need of using an electirc board which be bulky in comparison. 
+In order to connect everything together, we uses jumper cable with breadboard at first. Then we decided to solder common grounds and VCC together so that we only have one cable connecting every component for each. We also embedded 330 Ohm resistors inside the wires for LED. With this modification, we could remove the need of using an extern breadboard which would make the sytem bulky in comparison. 
 
-Another issue we had is the servo motor. The servo motor was pertubating aggresively every time the bar reach the center point of the orientation which is 90 degree facing forward. After consulting with Rogelio, we decided to use a brand new servo motor. The new servo motor was working well at first, but then after extensive testing, the pertubations started to become visible again. We suspect that this could be due to the voltage source of the servo motor. 
+Another issue we had is the servo motor. The servo motor was pertubating aggresively every time the bar reach the center point of the orientation which is 90 degree facing forward. After consulting with our supervisor, we decided to use a brand new servo motor. The new servo motor was working well at first, but then after extensive testing, the pertubations started to become visible again. We suspect that this could be due to the voltage source of the servo motor.
 
 ---
 
@@ -144,13 +146,13 @@ To resolve this, we upgraded the architecture to a 6th-order Butterworth filter,
 
 The DSP architecture executes entirely on the STM32 during the `STATE_COMPUTE` window, processing two 1024-sample raw ADC buffers to calculate the Time Delay of Arrival (TDOA) without relying on external libraries. To meet strict real-time MCU constraints, the pipeline is divided into three optimized stages:
 
-### 7.1 Event Detection (Amplitude Thresholding)**
-To prevent the MCU from continuously running heavy arithmetic on background noise, the pipeline acts as a gatekeeper. It calculates the peak-to-peak amplitude ($max - min$) of the incoming buffers. If the spread falls below the established ambient noise floor (200 ADC units), the pipeline aborts to save power and processing time.
+### 7.1 Event Detection (Amplitude Thresholding)
+To prevent the MCU from continuously running heavy arithmetic on background noise, the pipeline acts as a gatekeeper. It calculates the peak-to-peak amplitude ($max - min$) of the incoming buffers. If the spread falls below the established ambient noise floor, the pipeline aborts to save power and processing time.
 
-### 7.2 Zero-Phase Signal Conditioning**
+### 7.2 Zero-Phase Signal Conditioning
 Because raw microphone data contains a positive DC voltage offset, the signal must be conditioned. Initial implementations using an IIR Biquad Band-Pass filter (300 Hz - 3000 Hz) caused frequency-dependent phase distortion ("ringing"), which temporally misaligned the acoustic waves and corrupted the cross-correlation output. To solve this, we implemented a zero-phase Mean-Centering approach: the MCU calculates the discrete baseline average of the 1024 samples and subtracts it, perfectly centering the wave at zero using safe integer arithmetic.
 
-### 7.3 Boundary-Optimized Cross-Correlation**
+### 7.3 Boundary-Optimized Cross-Correlation
 Standard cross-correlation of two 1024-sample arrays requires over 1,000,000 operations, exceeding real-time limits. However, given the physical microphone spacing ($d = 0.15$ m) and the speed of sound, the absolute maximum theoretical time delay between the two ears is just $\pm 22$ samples. By strictly bounding the search loop to this physical constraint, the algorithm's workload is reduced to just ~45 iterations. The discrete lag index that produces the highest correlation score is then returned to the geometric control logic.
 
 ### 7.4 Pipeline validation
