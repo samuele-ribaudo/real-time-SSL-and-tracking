@@ -141,13 +141,19 @@ To resolve this, we upgraded the architecture to a 6th-order Butterworth filter,
 ---
 
 ## 7. DSP pipeline (Ryan)
-- **Acoustic Math:** Threshold check and time-domain cross-correlation algorithm for TDOA.
 
+The DSP architecture executes entirely on the STM32 during the `STATE_COMPUTE` window, processing two 1024-sample raw ADC buffers to calculate the Time Delay of Arrival (TDOA) without relying on external libraries. To meet strict real-time MCU constraints, the pipeline is divided into three optimized stages:
 
+### 7.1 Event Detection (Amplitude Thresholding)**
+To prevent the MCU from continuously running heavy arithmetic on background noise, the pipeline acts as a gatekeeper. It calculates the peak-to-peak amplitude ($max - min$) of the incoming buffers. If the spread falls below the established ambient noise floor (200 ADC units), the pipeline aborts to save power and processing time.
 
+### 7.2 Zero-Phase Signal Conditioning**
+Because raw microphone data contains a positive DC voltage offset, the signal must be conditioned. Initial implementations using an IIR Biquad Band-Pass filter (300 Hz - 3000 Hz) caused frequency-dependent phase distortion ("ringing"), which temporally misaligned the acoustic waves and corrupted the cross-correlation output. To solve this, we implemented a zero-phase Mean-Centering approach: the MCU calculates the discrete baseline average of the 1024 samples and subtracts it, perfectly centering the wave at zero using safe integer arithmetic.
 
+### 7.3 Boundary-Optimized Cross-Correlation**
+Standard cross-correlation of two 1024-sample arrays requires over 1,000,000 operations, exceeding real-time limits. However, given the physical microphone spacing ($d = 0.15$ m) and the speed of sound, the absolute maximum theoretical time delay between the two ears is just $\pm 22$ samples. By strictly bounding the search loop to this physical constraint, the algorithm's workload is reduced to just ~45 iterations. The discrete lag index that produces the highest correlation score is then returned to the geometric control logic.
 
-### 7.2 Pipeline validation
+### 7.4 Pipeline validation
 
 The DSP pipeline is fully functional. With the environmental noise successfully attenuated, the cross-correlation of the filtered signals produces a singular, well-defined peak, allowing the system to accurately actuate the servo motor.
 
@@ -155,7 +161,7 @@ The DSP pipeline is fully functional. With the environmental noise successfully 
 
 > Figure: Validation of the working pipeline during a right-side sound test. It displays the unfiltered raw audio tracks with disturbances (top), the cleanly filtered signals between 300 Hz and 3000 Hz (middle), and the resulting cross-correlation (bottom) demonstrating a well-defined peak at a 24-sample lag for precise TDOA calculation.
 
-### 7.3 TDOA and angle calculation
+### 7.5 TDOA and angle calculation
 
 The calculation of the sound source's angle is handled by the `compute_angle_offset()` function defined insize `code/Core/Src/main.c`. Once the time delay `Δt` is derived from the sample offset, calculating the relative azimuth angle `θ` is a straightforward application of the following geometric formula:
 
