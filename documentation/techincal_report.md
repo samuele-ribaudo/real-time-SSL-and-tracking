@@ -113,9 +113,22 @@ For the CAD design, we started with a first sketch and then bring it into 3-dime
 ---
 
 ## 5. Hardware fabrication (Ryan)
-In order to connect everything together, we uses jumper cable with breadboard at first. Then we decided to solder common grounds and VCC together so that we only have one cable connecting every component for each. We also embedded 330 Ohm resistors inside the wires that go to the RGB LED channels to prevent overcurrent damage. With this modification, we could remove the need of using an extern breadboard which would make the sytem bulky in comparison.
+In the initial prototyping phase, the components were connected using traditional jumper cables and a breadboard. To reduce the system's footprint and eliminate the need for a bulky external breadboard, we soldered the common grounds and VCC connections directly into unified lines. Additionally, 330 Ohm current-limiting resistors were embedded directly inside the wires leading to the RGB LED channels to protect the hardware from overcurrent damage. 
 
-Another issue we had is the servo motor. The servo motor was pertubating aggresively every time the bar reach the center point of the orientation which is 90 degree facing forward. After consulting with our supervisor, we decided to use a brand new servo motor. The new servo motor was working well at first, but then after extensive testing, the pertubations started to become visible again. We suspect that this could be due to the voltage source of the servo motor.
+To improve system readability and simplify debugging, we adopted a standardized, purpose-driven wire coloring scheme:
+
+| Wire color | Purpose / Connection |
+| :--- | :--- |
+| White | Main 5V power supply line routed to the components. |
+| Black | Common Ground (GND) connection to establish a shared reference plane. |
+| Red | Digital control for the RGB LED Red channel. |
+| Green | Digital control for the RGB LED Green channel. |
+| Blue | Digital control for the RGB LED Blue channel. |
+| Orange | Dedicated PWM signal line to control the 180° servo motor actuation. |
+| Purple | Analog output signal transmission from the left microphone. |
+| Yellow | Analog output signal transmission from the right microphone. |
+
+Another hardware challenge involved the servo motor, which exhibited aggressive perturbations whenever the bar reached the 90° center point facing forward. After consulting with our supervisor, we decided to use a brand new servo motor. While replacing the unit with a brand new servo motor initially resolved the issue, the perturbations returned after extensive testing. We suspect this instability stems from voltage fluctuations in the servo motor's power source rather than a mechanical failure.
 
 ---
 

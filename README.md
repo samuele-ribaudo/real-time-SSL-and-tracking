@@ -76,6 +76,20 @@ The system architecture utilizes dedicated hardware peripherals on the NUCLEO-U0
                                 +-------------------------------+
 ```
 
+To improve system readability and simplify debugging, we adopted a standardized, purpose-driven wire coloring scheme:
+
+| Wire color | Purpose / Connection |
+| :--- | :--- |
+| White | Main 5V power supply line routed to the components. |
+| Black | Common Ground (GND) connection to establish a shared reference plane. |
+| Red | Digital control for the RGB LED Red channel. |
+| Green | Digital control for the RGB LED Green channel. |
+| Blue | Digital control for the RGB LED Blue channel. |
+| Orange | Dedicated PWM signal line to control the 180° servo motor actuation. |
+| Purple | Analog output signal transmission from the left microphone. |
+| Yellow | Analog output signal transmission from the right microphone. |
+
+
 ---
 ## 6. MCU peripherals configuration
 
