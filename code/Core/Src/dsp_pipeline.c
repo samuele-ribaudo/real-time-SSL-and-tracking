@@ -18,7 +18,7 @@ typedef struct {
     float b0, b1, b2;
     float a1, a2;
 
-    // history storage variavbles
+    // history storage variables
     float x1, x2;
     float y1, y2;
 } biquad_window;
@@ -29,6 +29,7 @@ typedef struct {
  * @param[in] left   Pointer to Left channel ADC buffer.
  * @param[in] right  Pointer to Right channel ADC buffer.
  * @param[in] size   Total number of samples in the buffers.
+ * @param[in] threshold  The minimum peak-to-peak amplitude to consider a sound event valid.
  * @return true if peak-to-peak amplitude exceeds noise floor, false if room is quiet.
  */
 static bool check_amplitude_threshold(const uint16_t* left, const uint16_t* right, uint16_t size, const uint16_t threshold) {
@@ -62,7 +63,7 @@ static bool check_amplitude_threshold(const uint16_t* left, const uint16_t* righ
 
 /**
  * @brief Calculates the mean of the input array and subtracts it to center the signal at 0.
-* @param[in] input   pointer to the array storng the raw data
+ * @param[in] input   pointer to the array storing the raw data
  * @param[out] output  pointer to the array storng the shifted data
  * @return none
  */
@@ -80,7 +81,7 @@ static void remove_dc_offset(const uint16_t *input, int16_t *output, uint16_t si
 
 
 /**
- * @brief process one window of rhe biquad filter
+ * @brief process one window of the biquad filter
  * @param[in] input input value
  * @param[in] window  biquad window storing coefficients and memory values
  * @return the filtered output
@@ -107,7 +108,7 @@ static float process_window(float input, biquad_window *window){
 
 /**
  * @brief apply a low pass filter and an high pass filter to obtain a bandpass filter to an array
- * @param[in, out] signal   pointer to the array storng the unfiltered data, that will contain the filtered one
+ * @param[in, out] signal   pointer to the array storing the unfiltered data, that will contain the filtered one
  * @param[in] size      length of the data arrays
  * @param[in] stages    pointer to the array of biquad windows
  * @param[in] num_stages number of biquad stages
@@ -121,7 +122,7 @@ static void bandpass_filter(int16_t *signal, const uint16_t size, biquad_window 
         for(uint8_t stage = 0; stage < num_stages; stage++)
             current_sample = process_window(current_sample, &stages[stage]);
 
-        // Calmping to prevent integer overflow
+        // Clamping to prevent integer overflow
         if(current_sample > 32767.0f) current_sample = 32767.0f;
         if(current_sample < -32768.0f) current_sample = -32768.0f;
 

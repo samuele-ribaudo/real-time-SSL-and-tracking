@@ -128,13 +128,6 @@ int main(void)
             } 
             else current_servo_angle += angle_offset;
 
-            // DEBUG
-            
-            char boot_msg[] = "MCU Booted Successfully!\r\n";
-            extern UART_HandleTypeDef hcom_uart[];
-            HAL_UART_Transmit(&hcom_uart[COM1], (uint8_t*)boot_msg, sizeof(boot_msg)-1, 1000);
-
-
             // go to next state
             system_state = STATE_ACTUATE;
             break;
@@ -167,7 +160,7 @@ int main(void)
 
             // reset out of bound flag
             out_of_bound_detected = false;
-            // Flash Red LED for 2 seconds
+            // Flash Red LED for OUT_OF_BOUNDS_DELAY
             int count = OUT_OF_BOUNDS_DELAY / 500;
             if(count < 1) count = 1; // Ensure at least one flash
             for(int i = 0; i < count; i++){
