@@ -40,7 +40,7 @@ static void stm32cubeMX_setup(void);
 static void set_led_state(led_state_t color);
 static void split_raw_data(void);
 static float compute_angle_offset(int16_t sample_offset);
-static void set_servo_angle(float angle);
+static float set_servo_angle(float target_angle, float current_angle);
 
 
 /* Variables -----------------------------------------------------------------*/
@@ -61,6 +61,7 @@ int main(void)
 {
   // variables
   float current_servo_angle = SERVO_CENTER_ANGLE; // Start at center
+  float target_servo_angle = SERVO_CENTER_ANGLE; // Start at center
   float angle_offset;
   int16_t sample_offset;
   uint32_t last_sound_time = HAL_GetTick(); // for inactivity timeout
@@ -74,7 +75,7 @@ int main(void)
   // Turn on the ADC Trigger Timer (Timer 3)
   HAL_TIM_Base_Start(&htim3);
 
-  set_servo_angle(SERVO_CENTER_ANGLE);
+  current_servo_angle = set_servo_angle(SERVO_CENTER_ANGLE, current_servo_angle); // Center the servo at startup
   HAL_Delay(BEAM_SETUP_DELAY); // Allow time for the servo to reach center position and center the beam
 
   while (1){
@@ -104,7 +105,7 @@ int main(void)
               
               // If no sound detected, check for inactivity timeout
               if((HAL_GetTick() - last_sound_time > INACTIVITY_TIMEOUT) && (fabs(current_servo_angle - SERVO_CENTER_ANGLE) > 0.01f)){
-                current_servo_angle = SERVO_CENTER_ANGLE; // Set angle to center
+                target_servo_angle = SERVO_CENTER_ANGLE; // Set angle to center
                 last_sound_time = HAL_GetTick(); // Reset the timer so it doesn't constantly trigger
                 system_state = STATE_ACTUATE;    // Go to actuate state to move the motor
               }
@@ -119,14 +120,14 @@ int main(void)
 
             // Set the new servo angle and check for boundary conditions
             if(current_servo_angle + angle_offset > SERVO_MAX_ANGLE){
-              current_servo_angle = SERVO_MAX_ANGLE;
+              target_servo_angle = SERVO_MAX_ANGLE;
               out_of_bound_detected = true;
             }
             else if(current_servo_angle + angle_offset < SERVO_MIN_ANGLE){
-              current_servo_angle = SERVO_MIN_ANGLE;
+              target_servo_angle = SERVO_MIN_ANGLE;
               out_of_bound_detected = true;
             } 
-            else current_servo_angle += angle_offset;
+            else target_servo_angle += angle_offset;
 
             // go to next state
             system_state = STATE_ACTUATE;
@@ -138,7 +139,7 @@ int main(void)
             set_led_state(GREEN);
             
             // update servo position
-            set_servo_angle(current_servo_angle);
+            current_servo_angle = set_servo_angle(target_servo_angle, current_servo_angle);
 
             // change state
             if(out_of_bound_detected) system_state = STATE_OUT_OF_BOUNDS;
@@ -252,21 +253,32 @@ static float compute_angle_offset(int16_t sample_offset){
 
 
 /**
-* @brief set the servo motor to the desired angle within the servo limitations
-* @param[in] angle the desired angle in radiants
-* @retval none
+* @brief set the servo motor to the desired angle within the servo limitations at a controlled speed
+* @param[in] target_angle the desired target angle in radians
+* @param[in] current_angle the current angle of the servo in radians
+* @retval the updated current servo angle in radians
 */
-static void set_servo_angle(float angle){
+static float set_servo_angle(float target_angle, float current_angle){
 
-  // convert angle to PWM
-  int pwm_value = angle * (SERVO_MAX_PWM - SERVO_MIN_PWM)/(SERVO_MAX_ANGLE - SERVO_MIN_ANGLE) + SERVO_MIN_PWM;
+  if(SERVO_SPEED < 1.0f && SERVO_SPEED > 0.0f){ // Only limit the speed if it's between 0 and 1
+    float step = 0.0952f * SERVO_SPEED; // 0.0952 rad per 10ms = 0.11 sec / 60 degrees
+    while(fabsf(target_angle - current_angle) > step){
+      current_angle += (target_angle > current_angle) ? step : -step;
 
-  // clamp PWM value for safety reasons
+      int pwm_value = current_angle * (SERVO_MAX_PWM - SERVO_MIN_PWM)/(SERVO_MAX_ANGLE - SERVO_MIN_ANGLE) + SERVO_MIN_PWM;
+      if(pwm_value > SERVO_MAX_PWM) pwm_value = SERVO_MAX_PWM;
+      else if(pwm_value < SERVO_MIN_PWM) pwm_value = SERVO_MIN_PWM;
+      __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, pwm_value);
+      HAL_Delay(10);
+    }
+  }
+
+  // Set final target position
+  int pwm_value = target_angle * (SERVO_MAX_PWM - SERVO_MIN_PWM)/(SERVO_MAX_ANGLE - SERVO_MIN_ANGLE) + SERVO_MIN_PWM;
   if(pwm_value > SERVO_MAX_PWM) pwm_value = SERVO_MAX_PWM;
   else if(pwm_value < SERVO_MIN_PWM) pwm_value = SERVO_MIN_PWM;
-
-  // set PWM value
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, pwm_value);
+  return target_angle; // Return the final angle for tracking
 }
 
 
