@@ -93,7 +93,7 @@ stateDiagram-v2
 
 ---
 
-## 4. CAD design
+## 4. CAD design (Ryan)
 For the CAD design, we started with a first sketch and then bring it into 3-dimensional space with Solidworks. The first design was a proof of concept so that we could be sure that the system could actually be implemented physically and all the components could be connected functionally with each other. We started designing the system with a rough estimate of the measurements because we did not have the components yet. After receiving the components, we had to implement the correct measurements in our design. so that Once the first design has been materialized and our first prototype was fully functional, we switch our focus on the aesthetic aspect of the design to make look cooler instead of just square edges everywhere. In the first design, the cables connection were quite messy, so we decided to hide them away in the bar as this will give the system a much cleaner look.
 
 <div style="display: flex; gap: 10px;">
@@ -114,12 +114,14 @@ For the CAD design, we started with a first sketch and then bring it into 3-dime
 
 
 ## 5. Hardware fabrication (Ryan)
+
+### 5.1 Connections
 In the initial prototyping phase, the components were connected using traditional jumper cables and a breadboard. To reduce the system's footprint and eliminate the need for a bulky external breadboard, we soldered the common grounds and VCC connections directly into unified lines. Additionally, 330 Ohm current-limiting resistors were embedded directly inside the wires leading to the RGB LED channels to protect the hardware from overcurrent damage. 
 
 To improve system readability and simplify debugging, we adopted a standardized, purpose-driven wire coloring scheme:
 
 | Wire color | Purpose / Connection |
-| :--- | :--- |
+| --- | --- |
 | White | Main 5V power supply line routed to the components. |
 | Black | Common Ground (GND) connection to establish a shared reference plane. |
 | Red | Digital control for the RGB LED Red channel. |
@@ -129,7 +131,37 @@ To improve system readability and simplify debugging, we adopted a standardized,
 | Purple | Analog output signal transmission from the left microphone. |
 | Yellow | Analog output signal transmission from the right microphone. |
 
-Another hardware challenge involved the servo motor, which exhibited aggressive perturbations whenever the bar reached the 90° center point facing forward. After consulting with our supervisor, we decided to use a brand new servo motor. While replacing the unit with a brand new servo motor initially resolved the issue, the perturbations returned after extensive testing. We suspect this instability stems from voltage fluctuations in the servo motor's power source rather than a mechanical failure.
+### 5.2 The servo challenge
+
+Another hardware challenge involved the original servo motor, which suffered from aggressive perturbations at the 90° center position due to insufficient holding torque. To address this, we upgraded to a larger, higher-torque actuator. However, this new motor required a higher operating current than the Nucleo board could safely supply. 
+
+To resolve this without destabilizing the system, we engineered an external power distribution architecture by repurposing a standard 5V wall adapter. We modified the cable termination to solder a shared ground line that is plugged directly to the board's GND pin, establishing a common reference plane, while splitting the positive power rail into two dedicated connections. The first positive line routes directly to the servo's VCC input to isolate its heavy electrical load from the microcontroller, while the second connects directly to the board's power pin (VDD). This custom wiring harness successfully decoupled the actuator's power draw, eliminated the voltage-induced perturbations, and allowed the system to operate autonomously without relying on a PC USB connection.
+
+### 5.3 Signal routing and physical connections
+The diagram below details the exact physical signal and power routing for each system component.
+
+```text
+                                ┌───────────────────────────────┐
+                                │     STM32U083RC (Nucleo)      │                               5V power supply
+                                │                               │                             ┌────────────────┐
+                                │                          [GND]│─────────────────────────────│o  GND          │
+                                │                          [VDD]│───┬─────────────────────────│o  5V           │
+        Analog Left Mic         │                               │   │   180° Servo Morot      └────────────────┘
+    ┌────────────────────┐      │                               │   │  ┌──────────────────┐
+    │     OUT / Signal  o│─────>│[PC0]                          │   └──│o  VCC            │
+    │              VCC  o│──────│[5V]                     [PA15]│─────>│o  PWM signal     │
+    │              GND  o│──────│[GND]                     [GND]│──────│o  GND            │
+    └────────────────────┘      │         ┌───────────┐         │      └──────────────────┘
+                                │         │           │         │
+        Analog Right Mic        │         │   STM32   │         │           RGB LED
+    ┌────────────────────┐      │         │           │         │      ┌──────────────────┐
+    │     OUT / Signal  o│─────>│[PC1]    └───────────┘   [PB13]│─────>│o  Red channel    │
+    │              VCC  o│──────│[5V]                     [PB14]│─────>│o  Green channel  │
+    │              GND  o│──────│[GND]                    [PB15]│─────>│o  Blue channel   │
+    └────────────────────┘      │                          [GND]│──────│o  GND            │
+                                │                               │      └──────────────────┘
+                                └───────────────────────────────┘
+```
 
 ---
 
@@ -193,8 +225,10 @@ Even though harder to read, we deliberately chose to perform and maintain all an
 
 The development of the Real-Time Sound Source Localization and Tracking System yielded highly satisfactory results. The custom DSP pipeline executes entirely on the MCU and works exceptionally well to accurately calculate the Time Delay of Arrival (TDOA).
 
-While the core acoustic and computational goals were achieved, we identified the following areas for future improvement:
+While 1D horizontal tracking is fully functional, the primary limitation of the current two-microphone array is the cone of confusion, which is the geometric ambiguity where sounds originating from the front and back (or at different elevations) produce identical time delays. 
 
-* **Robust actuation:** Switching to a more powerful, metal-geared servo motor to prevent the continuous mechanical breakdowns experienced during testing.
+To overcome this, future iterations of the project can explore two distinct paths for 3D localization:
 
-* **Dedicated power supply:** Adding an external 5V power source for the servo motor to prevent it from drawing excessive current from the board, directly addressing the voltage fluctuations and instability observed during actuation.
+* **Adding a third microphone**: Introducing a third microphone to form a planar triangular array. This extra spatial dimension would provide a secondary TDOA axis, completely resolving front/back ambiguity and enabling full 2D azimuth and elevation tracking.
+
+* **Biomimetic spectral mapping**: Replicating the acoustic filtering of the human pinna (outer ear). By designing custom acoustic structures around the existing two microphones, incoming sound waves will bounce and attenuate differently depending on their angle of incidence. Because these unique spectral patterns modify the frequency response, a machine learning model or an AI-driven mapping pipeline could be trained to recognize these signatures, enabling true 3D localization using only two channels.

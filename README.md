@@ -5,6 +5,8 @@
 | Samuele Ribaudo | 03821248 | samuele.ribaudo@tum.de |
 | Hong Yan Jun  | 03813507 | go75kes@mytum.de |
 
+> To see the engineering challenges we encountered and our solutions to overcome them, check out the [technical report ↗](documentation/techincal_report.md)
+
 ## 1. Project overview
 
 This project is a robotic "hearing" system that can detect where a sound is coming from and automatically turn to face it.
@@ -48,7 +50,7 @@ To overcome the processing limitations of the micro controller and the physical 
 | Acoustic foam block | 1 | High-density foam sponge to block rear audio signals. |
 | RGB LED | 1 | A 4 pin RGB LED that provides real-time visual feedback of the state machine. It acts as a crucial flag for modular robotic design, flashing red when the target escapes the 180° physical field of hearing to trigger a "handoff" to a theoretical humanoid torso. |
 | 330 Ohm resistor | 3 | Resistors placed in series with the RGB LED channels to prevent overcurrent damage. |
-| PLA filament (3D Printing) | 1 | Material for printing the frame, board and servo mounts. |
+| PLA and TPU filament (3D Printing) | 1 | Material for printing the frame, board, servo mounts and ears (TPU). |
 | Assorted wires | 1 | General circuit routing and power distribution. |
 
 ---
@@ -57,29 +59,32 @@ To overcome the processing limitations of the micro controller and the physical 
 The system architecture utilizes dedicated hardware peripherals on the NUCLEO-U083RC board to handle high-speed data acquisition and actuation without blocking core application logic. The diagram below details the exact physical signal and power routing for each system component.
 
 ```text
-                                +-------------------------------+
-                                |     STM32U083RC (Nucleo)      |
-        Analog Left Mic         |                               |       180° Servo Morot
-    +--------------------+      |                               |      +------------------+
-    |     OUT / Signal  o|----->|[PC0]                    [PA15]|----->|o  PWM signal     |
-    |              VCC  o|------|[5V]                       [5V]|------|o  VCC            |
-    |              GND  o|------|[GND]                     [GND]|------|o  GND            |
-    +--------------------+      |         +-----------+         |      +------------------+
-                                |         |           |         |
-        Analog Right Mic        |         |   STM32   |         |           RGB LED
-    +--------------------+      |         |           |         |      +------------------+
-    |     OUT / Signal  o|----->|[PC1]    +-----------+   [PB13]|----->|o  Red channel    |
-    |              VCC  o|------|[5V]                     [PB14]|----->|o  Green channel  |
-    |              GND  o|------|[GND]                    [PB15]|----->|o  Blue channel   |
-    +--------------------+      |                          [GND]|------|o  GND            |
-                                |                               |      +------------------+
-                                +-------------------------------+
+                                ┌───────────────────────────────┐
+                                │     STM32U083RC (Nucleo)      │                               5V power supply
+                                │                               │                             ┌────────────────┐
+                                │                          [GND]│─────────────────────────────│o  GND          │
+                                │                          [VDD]│───┬─────────────────────────│o  5V           │
+        Analog Left Mic         │                               │   │   180° Servo Morot      └────────────────┘
+    ┌────────────────────┐      │                               │   │  ┌──────────────────┐
+    │     OUT / Signal  o│─────>│[PC0]                          │   └──│o  VCC            │
+    │              VCC  o│──────│[5V]                     [PA15]│─────>│o  PWM signal     │
+    │              GND  o│──────│[GND]                     [GND]│──────│o  GND            │
+    └────────────────────┘      │         ┌───────────┐         │      └──────────────────┘
+                                │         │           │         │
+        Analog Right Mic        │         │   STM32   │         │           RGB LED
+    ┌────────────────────┐      │         │           │         │      ┌──────────────────┐
+    │     OUT / Signal  o│─────>│[PC1]    └───────────┘   [PB13]│─────>│o  Red channel    │
+    │              VCC  o│──────│[5V]                     [PB14]│─────>│o  Green channel  │
+    │              GND  o│──────│[GND]                    [PB15]│─────>│o  Blue channel   │
+    └────────────────────┘      │                          [GND]│──────│o  GND            │
+                                │                               │      └──────────────────┘
+                                └───────────────────────────────┘
 ```
 
 To improve system readability and simplify debugging, we adopted a standardized, purpose-driven wire coloring scheme:
 
 | Wire color | Purpose / Connection |
-| :--- | :--- |
+| --- | --- |
 | White | Main 5V power supply line routed to the components. |
 | Black | Common Ground (GND) connection to establish a shared reference plane. |
 | Red | Digital control for the RGB LED Red channel. |
@@ -182,3 +187,36 @@ stateDiagram-v2
 * `STATE_OUT_OF_BOUNDS` (Red Flash): The out-of-bounds flag is cleared, and the system flashes the red LED to provide a visual warning that the target exceeded the 180° physical limit. Once the flashing sequence finishes, it returns to `STATE_LISTEN`.
 
 ---
+
+## 8. System validation and results
+
+The digital signal processing (DSP) pipeline was fully validated on the NUCLEO-U083RC microcontroller, proving that the real-time cross-correlation and Time Delay of Arrival (TDOA) algorithms accurately track acoustic sources.
+
+### 8.1 Signal filtering performance
+To isolate human speech from environmental noise, the incoming audio passes through a custom 6th-order Butterworth bandpass filter (300 Hz to 3000 Hz). As shown below, the filter successfully suppresses low-frequency hums (100 Hz) and high-frequency noise (6 kHz), completely flattening the noise floor to provide clean signals for cross-correlation:
+
+![Signal Filtering Output](documentation/utils/analysis_baseline.png)
+> *Figure: Raw recording with environmental noise disturbances (top) and the resulting clean, flattened noise floor after 6th-order filtering (bottom).*
+
+### 8.2 Pipeline execution and sound tracking
+When a sound is detected, the conditioned signals undergo a boundary-optimized cross-correlation to pinpoint the exact time delay. 
+
+The system validation capture below highlights a successful test with a sound source on the right side. The pipeline filters out heavy background noise and produces a sharp, singular cross-correlation peak at a 22-sample lag. This precise shift allows the geometric logic to accurately calculate the angle and smoothly actuate the servo motor toward the target.
+
+![Pipeline and Cross-Correlation Validation](documentation/utils/analysis_right.png)
+> *Figure: Complete validation of a right-side tracking test showing raw signals (top), filtered speech waveforms (middle), and the distinct cross-correlation peak used for TDOA calculation (bottom).*
+
+
+---
+
+## 9. Conclusions
+
+The development of the Real-Time Sound Source Localization and Tracking System yielded highly satisfactory results. The custom DSP pipeline executes entirely on the MCU and works exceptionally well to accurately calculate the Time Delay of Arrival (TDOA).
+
+While 1D horizontal tracking is fully functional, the primary limitation of the current two-microphone array is the cone of confusion, which is the geometric ambiguity where sounds originating from the front and back (or at different elevations) produce identical time delays. 
+
+To overcome this, future iterations of the project can explore two distinct paths for 3D localization:
+
+* **Adding a third microphone**: Introducing a third microphone to form a planar triangular array. This extra spatial dimension would provide a secondary TDOA axis, completely resolving front/back ambiguity and enabling full 2D azimuth and elevation tracking.
+
+* **Biomimetic spectral mapping**: Replicating the acoustic filtering of the human pinna (outer ear). By designing custom acoustic structures around the existing two microphones, incoming sound waves will bounce and attenuate differently depending on their angle of incidence. Because these unique spectral patterns modify the frequency response, a machine learning model or an AI-driven mapping pipeline could be trained to recognize these signatures, enabling true 3D localization using only two channels.
