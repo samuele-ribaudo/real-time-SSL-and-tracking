@@ -109,35 +109,14 @@ For the CAD design, we started with a first sketch and then bring it into 3-dime
 </div>
 
 
-> Figure: Left: Initial design without correct measurements. Right: Final design.
+> Figure: Initial design without correct measurements (Left). Final design (Right).
 ---
 
 
 ## 5. Hardware fabrication (Ryan)
 
-### 5.1 Connections
-In the initial prototyping phase, the components were connected using traditional jumper cables and a breadboard. To reduce the system's footprint and eliminate the need for a bulky external breadboard, we soldered the common grounds and VCC connections directly into unified lines. Additionally, 330 Ohm current-limiting resistors were embedded directly inside the wires leading to the RGB LED channels to protect the hardware from overcurrent damage. 
 
-To improve system readability and simplify debugging, we adopted a standardized, purpose-driven wire coloring scheme:
-
-| Wire color | Purpose / Connection |
-| --- | --- |
-| White | Main 5V power supply line routed to the components. |
-| Black | Common Ground (GND) connection to establish a shared reference plane. |
-| Red | Digital control for the RGB LED Red channel. |
-| Green | Digital control for the RGB LED Green channel. |
-| Blue | Digital control for the RGB LED Blue channel. |
-| Orange | Dedicated PWM signal line to control the 180° servo motor actuation. |
-| Purple | Analog output signal transmission from the left microphone. |
-| Yellow | Analog output signal transmission from the right microphone. |
-
-### 5.2 The servo challenge
-
-Another hardware challenge involved the original servo motor, which suffered from aggressive perturbations at the 90° center position due to insufficient holding torque. To address this, we upgraded to a larger, higher-torque actuator. However, this new motor required a higher operating current than the Nucleo board could safely supply. 
-
-To resolve this without destabilizing the system, we engineered an external power distribution architecture by repurposing a standard 5V wall adapter. We modified the cable termination to solder a shared ground line that is plugged directly to the board's GND pin, establishing a common reference plane, while splitting the positive power rail into two dedicated connections. The first positive line routes directly to the servo's VCC input to isolate its heavy electrical load from the microcontroller, while the second connects directly to the board's power pin (VDD). This custom wiring harness successfully decoupled the actuator's power draw, eliminated the voltage-induced perturbations, and allowed the system to operate autonomously without relying on a PC USB connection.
-
-### 5.3 Signal routing and physical connections
+### 5.1 Signal routing and physical connections
 The diagram below details the exact physical signal and power routing for each system component.
 
 ```text
@@ -162,6 +141,38 @@ The diagram below details the exact physical signal and power routing for each s
                                 │                               │      └──────────────────┘
                                 └───────────────────────────────┘
 ```
+
+### 5.2 Connections
+In the initial prototyping phase, the components were connected using traditional jumper cables and a breadboard. 
+
+<div style="display: flex; gap: 10px;">
+  <img src="utils/prototype_0.gif" alt="Initial breadboard prototype" width="49%" />
+  <img src="utils/prototype_1.gif" alt="Integrated 3D printed prototype" width="49%" />
+</div>
+
+> Figure: Initial breadboard verification showing raw jumper routing and proof-of-concept components alignment (Left). Second prototype iteration showing a cleaner structural design with integrated 3D-printed mounts (Right).
+
+
+To reduce the system's footprint and eliminate the need for a bulky external breadboard, we soldered the common grounds and VCC connections directly into unified lines. Additionally, 330 Ohm current-limiting resistors were embedded directly inside the wires leading to the RGB LED channels to protect the hardware from overcurrent damage. 
+
+To improve system readability and simplify debugging, we adopted a standardized, purpose-driven wire coloring scheme:
+
+| Wire color | Purpose / Connection |
+| --- | --- |
+| White | Main 5V power supply line routed to the components. |
+| Black | Common Ground (GND) connection to establish a shared reference plane. |
+| Red | Digital control for the RGB LED Red channel. |
+| Green | Digital control for the RGB LED Green channel. |
+| Blue | Digital control for the RGB LED Blue channel. |
+| Orange | Dedicated PWM signal line to control the 180° servo motor actuation. |
+| Purple | Analog output signal transmission from the left microphone. |
+| Yellow | Analog output signal transmission from the right microphone. |
+
+### 5.3 The servo challenge
+
+Another hardware challenge involved the original servo motor, which suffered from aggressive perturbations at the 90° center position due to insufficient holding torque. To address this, we upgraded to a larger, higher-torque actuator. However, this new motor required a higher operating current than the Nucleo board could safely supply. 
+
+To resolve this without destabilizing the system, we engineered an external power distribution architecture by repurposing a standard 5V wall adapter. We modified the cable termination to solder a shared ground line that is plugged directly to the board's GND pin, establishing a common reference plane, while splitting the positive power rail into two dedicated connections. The first positive line routes directly to the servo's VCC input to isolate its heavy electrical load from the microcontroller, while the second connects directly to the board's power pin (VDD). This custom wiring harness successfully decoupled the actuator's power draw, eliminated the voltage-induced perturbations, and allowed the system to operate autonomously without relying on a PC USB connection.
 
 ---
 
