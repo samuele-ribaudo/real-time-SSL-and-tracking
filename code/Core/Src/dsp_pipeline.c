@@ -1,3 +1,16 @@
+/**
+ * @file    dsp_pipeline.c
+ * @brief   Custom Digital Signal Processing (DSP) pipeline for audio localization.
+ *
+ * @details This file implements the core mathematical algorithms to calculate 
+ * the Time Delay of Arrival (TDOA) between two microphone channels. To meet 
+ * strict real-time MCU constraints without external DSP libraries, the pipeline 
+ * is structured into optimized sequential stages: Event Detection (amplitude 
+ * thresholding to save CPU), Signal Conditioning (DC offset removal), 6th-order 
+ * Butterworth Bandpass Filtering (300Hz-3000Hz via cascaded biquads), and 
+ * Boundary-Optimized Cross-Correlation restricted by physical microphone distance.
+ */
+
 #include "dsp_pipeline.h"
 #include "config.h"
 #include <stdint.h>

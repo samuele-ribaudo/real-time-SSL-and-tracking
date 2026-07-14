@@ -1,3 +1,14 @@
+/**
+ * @file    dsp_pipeline.h
+ * @brief   Public interface for the Digital Signal Processing (DSP) pipeline.
+ *
+ * @details This header exposes the main DSP function used to calculate the 
+ * Time Delay of Arrival (TDOA) between two audio channels. It provides a 
+ * clean abstraction, allowing the main control loop to execute the complex 
+ * mathematical pipeline (event detection, signal conditioning, filtering, 
+ * and cross-correlation) through a single function call.
+ */
+
 #ifndef DSP_PIPELINE_H
 #define DSP_PIPELINE_H
 

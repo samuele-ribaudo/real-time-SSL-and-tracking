@@ -1,3 +1,16 @@
+/**
+ * @file    main.c
+ * @brief   Main application logic and finite state machine (FSM) controller.
+ *
+ * @details This file serves as the primary entry point for the Real-Time Sound 
+ * Source Localization and Tracking System. Its main structure consists of 
+ * hardware peripheral initialization (ADC, DMA, Timers, GPIO) and a 
+ * sequential Finite State Machine (Listen, Compute, Actuate, Settle, 
+ * Out-of-Bounds). It bridges the DSP algorithm outputs with physical 
+ * motor actuation while preventing mechanical servo noise from 
+ * interfering with microphone recordings.
+ */
+
 #include "main.h"
 #include "cmsis_gcc.h"
 #include "config.h"

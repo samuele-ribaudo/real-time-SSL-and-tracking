@@ -1,3 +1,13 @@
+/**
+ * @file    config.h
+ * @brief   Centralized configuration parameters and constants.
+ *
+ * @details This header defines all tunable system variables, physical constants, 
+ * hardware limits (such as servo PWM values and angles), system timing constraints, 
+ * and DSP thresholds. Centralizing these parameters allows for easy compile-time 
+ * adjustments without modifying the core application logic.
+ */
+
 #ifndef CONFIG_H
 #define CONFIG_H
 

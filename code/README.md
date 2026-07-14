@@ -12,8 +12,7 @@ code/
 ├── Core/
 │   ├── Inc/
 │   │   ├── config.h                 # Global system parameters, thresholds, and calibration constants
-│   │   ├── dsp_pipeline.h           # Header declaring custom DSP filtering and cross-correlation functions
-│   │   └── main.h                   # Peripheral configuration macros and state machine definitions
+│   │   └── dsp_pipeline.h           # Header declaring custom DSP filtering and cross-correlation functions
 │   └── Src/
 │       ├── main.c                   # Main application loop, peripheral setup (ADC, DMA, TIM for PWM), and state machine
 │       └── dsp_pipeline.c           # Custom DSP pipeline (discrete 300Hz - 3000Hz band-pass filter and cross-correlation)
