@@ -11,6 +11,8 @@ This project is a robotic "hearing" system that can detect where a sound is comi
 
 Using an STM32 microcontroller and two standard microphones, the system acts like a pair of human ears. When a person speaks, the system calculates the sound's origin and uses a servo motor to physically rotate the sensor array toward the speaker. It is designed to mimic a human neck's 180° range of motion. If a sound moves beyond what the system can physically reach, an onboard RGB LED signals a visual warning, acting as a modular trigger that would theoretically tell a larger humanoid robot to rotate its entire body.
 
+![acutal robot](utils/robot.jpg)
+> Figure: The final robotic project
 ---
 
 ## 2. MCU Configuration (Samuele)
@@ -94,6 +96,10 @@ stateDiagram-v2
 ---
 
 ## 4. CAD design (Ryan)
+
+![exploded view](utils/exploded_view.png)
+> Figure: Exploded view of the system
+
 For the CAD design, we started with a first sketch and then bring it into 3-dimensional space with Solidworks. The first design was a proof of concept so that we could be sure that the system could actually be implemented physically and all the components could be connected functionally with each other. We started designing the system with a rough estimate of the measurements because we did not have the components yet. After receiving the components, we had to implement the correct measurements in our design. so that Once the first design has been materialized and our first prototype was fully functional, we switch our focus on the aesthetic aspect of the design to make look cooler instead of just square edges everywhere. In the first design, the cables connection were quite messy, so we decided to hide them away in the bar as this will give the system a much cleaner look.
 
 <div style="display: flex; gap: 10px;">
@@ -109,35 +115,14 @@ For the CAD design, we started with a first sketch and then bring it into 3-dime
 </div>
 
 
-> Figure: Left: Initial design without correct measurements. Right: Final design.
+> Figure: Initial design without correct measurements (Left). Final design (Right).
 ---
 
 
 ## 5. Hardware fabrication (Ryan)
 
-### 5.1 Connections
-In the initial prototyping phase, the components were connected using traditional jumper cables and a breadboard. To reduce the system's footprint and eliminate the need for a bulky external breadboard, we soldered the common grounds and VCC connections directly into unified lines. Additionally, 330 Ohm current-limiting resistors were embedded directly inside the wires leading to the RGB LED channels to protect the hardware from overcurrent damage. 
 
-To improve system readability and simplify debugging, we adopted a standardized, purpose-driven wire coloring scheme:
-
-| Wire color | Purpose / Connection |
-| --- | --- |
-| White | Main 5V power supply line routed to the components. |
-| Black | Common Ground (GND) connection to establish a shared reference plane. |
-| Red | Digital control for the RGB LED Red channel. |
-| Green | Digital control for the RGB LED Green channel. |
-| Blue | Digital control for the RGB LED Blue channel. |
-| Orange | Dedicated PWM signal line to control the 180° servo motor actuation. |
-| Purple | Analog output signal transmission from the left microphone. |
-| Yellow | Analog output signal transmission from the right microphone. |
-
-### 5.2 The servo challenge
-
-Another hardware challenge involved the original servo motor, which suffered from aggressive perturbations at the 90° center position due to insufficient holding torque. To address this, we upgraded to a larger, higher-torque actuator. However, this new motor required a higher operating current than the Nucleo board could safely supply. 
-
-To resolve this without destabilizing the system, we engineered an external power distribution architecture by repurposing a standard 5V wall adapter. We modified the cable termination to solder a shared ground line that is plugged directly to the board's GND pin, establishing a common reference plane, while splitting the positive power rail into two dedicated connections. The first positive line routes directly to the servo's VCC input to isolate its heavy electrical load from the microcontroller, while the second connects directly to the board's power pin (VDD). This custom wiring harness successfully decoupled the actuator's power draw, eliminated the voltage-induced perturbations, and allowed the system to operate autonomously without relying on a PC USB connection.
-
-### 5.3 Signal routing and physical connections
+### 5.1 Signal routing and physical connections
 The diagram below details the exact physical signal and power routing for each system component.
 
 ```text
@@ -162,6 +147,38 @@ The diagram below details the exact physical signal and power routing for each s
                                 │                               │      └──────────────────┘
                                 └───────────────────────────────┘
 ```
+
+### 5.2 Connections
+In the initial prototyping phase, the components were connected using traditional jumper cables and a breadboard. 
+
+<div style="display: flex; gap: 10px;">
+  <img src="utils/prototype_0.gif" alt="Initial breadboard prototype" width="49%" />
+  <img src="utils/prototype_1.gif" alt="Integrated 3D printed prototype" width="49%" />
+</div>
+
+> Figure: Initial breadboard verification showing raw jumper routing and proof-of-concept components alignment (Left). Second prototype iteration showing a cleaner structural design with integrated 3D-printed mounts (Right).
+
+
+To reduce the system's footprint and eliminate the need for a bulky external breadboard, we soldered the common grounds and VCC connections directly into unified lines. Additionally, 330 Ohm current-limiting resistors were embedded directly inside the wires leading to the RGB LED channels to protect the hardware from overcurrent damage. 
+
+To improve system readability and simplify debugging, we adopted a standardized, purpose-driven wire coloring scheme:
+
+| Wire color | Purpose / Connection |
+| --- | --- |
+| White | Main 5V power supply line routed to the components. |
+| Black | Common Ground (GND) connection to establish a shared reference plane. |
+| Red | Digital control for the RGB LED Red channel. |
+| Green | Digital control for the RGB LED Green channel. |
+| Blue | Digital control for the RGB LED Blue channel. |
+| Orange | Dedicated PWM signal line to control the 180° servo motor actuation. |
+| Purple | Analog output signal transmission from the right microphone. |
+| Yellow | Analog output signal transmission from the left microphone. |
+
+### 5.3 The servo challenge
+
+Another hardware challenge involved the original servo motor, which suffered from aggressive perturbations at the 90° center position due to insufficient holding torque. To address this, we upgraded to a larger, higher-torque actuator. However, this new motor required a higher operating current than the Nucleo board could safely supply. 
+
+To resolve this without destabilizing the system, we engineered an external power distribution architecture by repurposing a standard 5V wall adapter. We modified the cable termination to solder a shared ground line that is plugged directly to the board's GND pin, establishing a common reference plane, while splitting the positive power rail into two dedicated connections. The first positive line routes directly to the servo's VCC input to isolate its heavy electrical load from the microcontroller, while the second connects directly to the board's power pin (VDD). This custom wiring harness successfully decoupled the actuator's power draw, eliminated the voltage-induced perturbations, and allowed the system to operate autonomously without relying on a PC USB connection.
 
 ---
 
@@ -223,7 +240,23 @@ Even though harder to read, we deliberately chose to perform and maintain all an
 
 ## 8. Conclusions
 
+### 8.1 Live demo
+
 The development of the Real-Time Sound Source Localization and Tracking System yielded highly satisfactory results. The custom DSP pipeline executes entirely on the MCU and works exceptionally well to accurately calculate the Time Delay of Arrival (TDOA).
+
+To showcase the system's real-time capabilities in a practical environment, the following demonstration highlights it's core features:
+
+
+![Live system demo](utils/demo.gif)
+> Video: Real-time demonstration of the robotic hearing system reacting to finger snaps. ([Download MP4 version](https://github.com/samuele-ribaudo/real-time-SSL-and-tracking/blob/main/documentation/demo.mp4))
+
+This sequence validates three key system behaviors:
+* **High-frequency noise rejection:** A smartphone plays a continuous 6000 Hz background noise. The system's digital filters effectively ignore this disturbance, allowing it to smoothly localize the sound of a human snapping their fingers.
+* **Out-of-bounds warning:** When a finger snap occurs outside the physical 180° range of motion, the system correctly flags the out-of-bounds coordinate and flashes the onboard RGB LED red.
+* **Inactivity reset:** After 5 seconds of complete silence, the inactivity timeout triggers, and the servo motor automatically resets to its default center position.
+
+
+### 8.2 Future improvements
 
 While 1D horizontal tracking is fully functional, the primary limitation of the current two-microphone array is the cone of confusion, which is the geometric ambiguity where sounds originating from the front and back (or at different elevations) produce identical time delays. 
 

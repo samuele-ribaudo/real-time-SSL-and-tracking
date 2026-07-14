@@ -13,6 +13,9 @@ This project is a robotic "hearing" system that can detect where a sound is comi
 
 Using an STM32 microcontroller and two standard microphones, the system acts like a pair of human ears. When a person speaks, the system calculates the sound's origin and uses a servo motor to physically rotate the sensor array toward the speaker. It is designed to mimic a human neck's 180° range of motion. If a sound moves beyond what the system can physically reach, an onboard RGB LED signals a visual warning, acting as a modular trigger that would theoretically tell a larger humanoid robot to rotate its entire body.
 
+![acutal robot](documentation/utils/robot.jpg)
+> Figure: The final robotic project
+
 ---
 
 ## 2. Project structure
@@ -40,7 +43,10 @@ At a technical level, this project implements an embedded Sound Source Localizat
 To overcome the processing limitations of the micro controller and the physical realities of robotics, the system employs clever hardware-software design. It uses an acoustic foam baffle to eliminate the front-back "cone of confusion", calculates all math algorithms from scratch without relying on pre-built DSP libraries, and utilizes a strict "Listen-Compute-Move" state machine to prevent mechanical servo noise from corrupting the audio buffers. A 180° servo motor dynamically actuates the sensor array using a "relative-to-absolute" coordinate mapping to track the sound source.
 
 ---
-## 4. Required materials
+## 4. Required materials & assembly
+
+![exploded view](documentation/utils/exploded_view.png)
+> Figure: Exploded view of the system
 
 | **Component** | **Qty** | **Description** |
 | --- | --- | --- |
@@ -52,6 +58,7 @@ To overcome the processing limitations of the micro controller and the physical 
 | 330 Ohm resistor | 3 | Resistors placed in series with the RGB LED channels to prevent overcurrent damage. |
 | PLA and TPU filament (3D Printing) | 1 | Material for printing the frame, board, servo mounts and ears (TPU). |
 | Assorted wires | 1 | General circuit routing and power distribution. |
+
 
 ---
 ## 5. Physical connections & pin mapping
@@ -91,8 +98,8 @@ To improve system readability and simplify debugging, we adopted a standardized,
 | Green | Digital control for the RGB LED Green channel. |
 | Blue | Digital control for the RGB LED Blue channel. |
 | Orange | Dedicated PWM signal line to control the 180° servo motor actuation. |
-| Purple | Analog output signal transmission from the left microphone. |
-| Yellow | Analog output signal transmission from the right microphone. |
+| Purple | Analog output signal transmission from the right microphone. |
+| Yellow | Analog output signal transmission from the left microphone. |
 
 
 ---
@@ -204,12 +211,25 @@ When a sound is detected, the conditioned signals undergo a boundary-optimized c
 The system validation capture below highlights a successful test with a sound source on the right side. The pipeline filters out heavy background noise and produces a sharp, singular cross-correlation peak at a 22-sample lag. This precise shift allows the geometric logic to accurately calculate the angle and smoothly actuate the servo motor toward the target.
 
 ![Pipeline and Cross-Correlation Validation](documentation/utils/analysis_right.png)
-> *Figure: Complete validation of a right-side tracking test showing raw signals (top), filtered speech waveforms (middle), and the distinct cross-correlation peak used for TDOA calculation (bottom).*
+> Figure: Complete validation of a right-side tracking test showing raw signals (top), filtered speech waveforms (middle), and the distinct cross-correlation peak used for TDOA calculation (bottom).
 
+---
+## 9. Live system demonstration
+
+To showcase the system's real-time capabilities in a practical environment, the following demonstration highlights it's core features:
+
+
+![Live system demo](documentation/utils/demo.gif)
+> Video: Real-time demonstration of the robotic hearing system reacting to finger snaps. ([Download MP4 version](documentation/demo.mp4))
+
+This sequence validates three key system behaviors:
+* **High-frequency noise rejection:** A smartphone plays a continuous 6000 Hz background noise. The system's digital filters effectively ignore this disturbance, allowing it to smoothly localize the sound of a human snapping their fingers.
+* **Out-of-bounds warning:** When a finger snap occurs outside the physical 180° range of motion, the system correctly flags the out-of-bounds coordinate and flashes the onboard RGB LED red.
+* **Inactivity reset:** After 5 seconds of complete silence, the inactivity timeout triggers, and the servo motor automatically resets to its default center position.
 
 ---
 
-## 9. Conclusions
+## 10. Conclusions
 
 The development of the Real-Time Sound Source Localization and Tracking System yielded highly satisfactory results. The custom DSP pipeline executes entirely on the MCU and works exceptionally well to accurately calculate the Time Delay of Arrival (TDOA).
 

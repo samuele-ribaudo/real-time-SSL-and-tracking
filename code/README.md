@@ -17,30 +17,74 @@ code/
 │   └── Src/
 │       ├── main.c                   # Main application loop, peripheral setup (ADC, DMA, TIM for PWM), and state machine
 │       └── dsp_pipeline.c           # Custom DSP pipeline (discrete 300Hz - 3000Hz band-pass filter and cross-correlation)
-├── Drivers/
 ...
 ```
 
-> Note on Generated Files: all remaining files within the `Core/` directory (such as `stm32u0xx_it.c` for Interrupt Service Routines) and the entire `Drivers/` directory (containing ST's official Hardware Abstraction Layer and ARM CMSIS/DSP libraries) are standard files automatically generated and managed by **STM32CubeMX**.
+> Note on generated files: all remaining files and directories (e.g., `stm32u0xx_it.c` in the `Core/` directory for Interrupt Service Routines; the `Drivers/` directory containing ST's official Hardware Abstraction Layer and ARM CMSIS/DSP libraries) are standard files automatically generated and managed by **STM32CubeMX** that we didn't modify.
 
 
 ## Setup, Build, and Flash Instructions
 
 We use **Visual Studio Code** with the official **STM32 VS Code Extension** to build and flash this project.
+These instructions have been tested on **Ubuntu 22.04**.
 
-### Prerequisites & Dependencies
-1. **Visual Studio Code**: Download and install [VS Code](https://code.visualstudio.com/).
-2. **STM32 VS Code Extension**: Open VS Code, go to the Extensions tab (`Ctrl+Shift+X`), and search for `STM32CubeIDE` by STMicroelectronics. Install it.
+### Prerequisites & dependencies
+#### 1. Build tools and ARM toolchain
+Install build tools and the ARM toolchain by running the following commands in the terminal:
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install git build-essential cmake ninja-build gcc-arm-none-eabi gdb-multiarch -y
+```
+#### 2. Flashing tools and USB drivers 
+Install flashing tools and USB drivers by running the following command in the terminal:
+```bash
+sudo apt install openocd stlink-tools -y
+sudo usermod -a -G plugdev,dialout $USER
+```
+
+> CRITICAL: After running these commands, log out and log back into the Ubuntu session (or restart your PC) for the group changes to take effect.
 
 
-### Importing and Building
-1. Open VS Code and select `File > Open Folder...` and choose this `code` directory.
-2. The STM32 Extension should detect the `CMakeLists.txt`. 
-3. In the left activity bar, click on the **STM32 icon** to open the extension panel.
-4. Under the **Build** section in the STM32 panel, select your build preset (usually `Debug`).
-5. Click **Build**. The integrated CMake and Ninja tools will compile the source code. Look for a `Build finished with exit code 0` message in the terminal.
+#### 3. Visual Studio Code & Extension packs
+Download and install VS Code from [here](https://code.visualstudio.com/), or by running in the terminal:
+```bash
+sudo snap install code --classic
+```
 
-### Flashing and Running
-1. Connect your NUCLEO-U083RC board to your PC via the mini-USB cable.
-2. In the Run & Debug section, click `Run and Debug`. 
-3. Once the debugger starts, click on the arrow to skip it and flash the code onto the board
+Open VS Code, go to Extensions tab (`Ctrl+Shift+X`), and search for both `C/C++ Extension Pack` by Microsoft and `STM32CubeIDE` by STMicroelectronic. Install them.
+
+
+### Cloning the repository
+1. Open your terminal.
+2. Clone the repository.
+```bash
+git clone https://github.com/samuele-ribaudo/real-time-SSL-and-tracking.git
+```
+3. Navigate into the project folder.
+```bash
+cd real-time-SSL-and-tracking/code/
+```
+4. Open the project in VS Code.
+```bash
+code .
+```
+5. The STM32 Extension should detect the `CMakeLists.txt`. 
+
+
+### Building
+1. Click on the Build gear icon in the bottom left of the screen.
+2. Select your build preset (usually `Debug`).
+3. Look for a `Build finished with exit code 0` message in the terminal.
+
+
+### Flashing
+1. Connect your NUCLEO-U083RC board to your PC via the USB-C cable.
+2. In the Run & Debug section (`Ctrl+Shift+D`), click `Run and Debug`. 
+3. Select as debugger `STM32Cube: STM32 Launch STLink GDB Server`.
+4. Once the debugger starts, click on the `Continue` arrow (`F5`) and flash the code onto the board.
+
+### Standalone operation
+Once the microcontroller has been successfully flashed, the system can operate independently of the PC debugger.
+1. Disconnect the NUCLEO board from the PC (removing the USB-C debugging connection).
+2. Provide external power to the system by plugging the dedicated wall adapter.
+3. The system will initialize automatically. The servo will reset to its default center position, and the microphone array will immediately begin real-time environmental listening and localization.

@@ -12,3 +12,4 @@ This directory contains the central guidelines, proposals, presentations, and te
 | **`project_proposal.md`** | Specification | Comprehensive proposal detailing system architecture, hardware/software specifications, state machine mechanics, and explicit team workload distribution. |
 | **`pitch_presentation.pdf`** | Presentation | Brief pitch presentation deck summarizing the core robotic concept, operational finite state machine workflow, and required materials. |
 | **`technical_report.md`** | Final deliverable | Core comprehensive engineering and scientific group report developed in strict accordance with the instructor guidelines. |
+| **`demo.mp4`** | Video | The demo video showcasing the core features of the system |
