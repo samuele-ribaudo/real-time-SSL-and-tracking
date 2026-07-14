@@ -11,6 +11,8 @@ This project is a robotic "hearing" system that can detect where a sound is comi
 
 Using an STM32 microcontroller and two standard microphones, the system acts like a pair of human ears. When a person speaks, the system calculates the sound's origin and uses a servo motor to physically rotate the sensor array toward the speaker. It is designed to mimic a human neck's 180° range of motion. If a sound moves beyond what the system can physically reach, an onboard RGB LED signals a visual warning, acting as a modular trigger that would theoretically tell a larger humanoid robot to rotate its entire body.
 
+![acutal robot](utils/robot.jpg)
+> Figure: The final robotic project
 ---
 
 ## 2. MCU Configuration (Samuele)
@@ -94,6 +96,10 @@ stateDiagram-v2
 ---
 
 ## 4. CAD design (Ryan)
+
+![exploded view](utils/exploded_view.png)
+> Figure: Exploded view of the system
+
 For the CAD design, we started with a first sketch and then bring it into 3-dimensional space with Solidworks. The first design was a proof of concept so that we could be sure that the system could actually be implemented physically and all the components could be connected functionally with each other. We started designing the system with a rough estimate of the measurements because we did not have the components yet. After receiving the components, we had to implement the correct measurements in our design. so that Once the first design has been materialized and our first prototype was fully functional, we switch our focus on the aesthetic aspect of the design to make look cooler instead of just square edges everywhere. In the first design, the cables connection were quite messy, so we decided to hide them away in the bar as this will give the system a much cleaner look.
 
 <div style="display: flex; gap: 10px;">
@@ -165,8 +171,8 @@ To improve system readability and simplify debugging, we adopted a standardized,
 | Green | Digital control for the RGB LED Green channel. |
 | Blue | Digital control for the RGB LED Blue channel. |
 | Orange | Dedicated PWM signal line to control the 180° servo motor actuation. |
-| Purple | Analog output signal transmission from the left microphone. |
-| Yellow | Analog output signal transmission from the right microphone. |
+| Purple | Analog output signal transmission from the right microphone. |
+| Yellow | Analog output signal transmission from the left microphone. |
 
 ### 5.3 The servo challenge
 
