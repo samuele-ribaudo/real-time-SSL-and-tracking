@@ -45,7 +45,7 @@ To overcome the processing limitations of the micro controller and the physical 
 ---
 ## 4. Required materials & assembly
 
-![exploded view](utils/exploded_view.png)
+![exploded view](documentation/utils/exploded_view.png)
 > Figure: Exploded view of the system
 
 | **Component** | **Qty** | **Description** |
