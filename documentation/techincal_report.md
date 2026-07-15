@@ -225,7 +225,7 @@ The DSP pipeline is fully functional. With the environmental noise successfully 
 
 ![cross correlation](utils/analysis_right.png)
 
-> Figure: Validation of the working pipeline during a right-side sound test. It displays the unfiltered raw audio tracks with disturbances (top), the cleanly filtered signals between 300 Hz and 3000 Hz (middle), and the resulting cross-correlation (bottom) demonstrating a well-defined peak at a 24-sample lag for precise TDOA calculation.
+> Figure: Validation of the working pipeline during a right-side sound test. It displays the unfiltered raw audio tracks with disturbances (top), the cleanly filtered signals between 300 Hz and 3000 Hz (middle), and the resulting cross-correlation (bottom) demonstrating a well-defined peak at a 22-sample lag for precise TDOA calculation.
 
 ### 7.5 TDOA and angle calculation
 
