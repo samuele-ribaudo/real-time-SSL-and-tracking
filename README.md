@@ -5,9 +5,26 @@
 | Samuele Ribaudo | 03821248 | samuele.ribaudo@tum.de |
 | Hong Yan Jun  | 03813507 | go75kes@mytum.de |
 
-> To see the engineering challenges we encountered and our solutions to overcome them, check out the [technical report ↗](documentation/techincal_report.md)
+> To see the engineering challenges we encountered and our solutions to overcome them, check out the [technical report ↗](documentation/technical_report.pdf)
 
-## 1. Project overview
+## 1. Project structure
+
+```text
+.
+├── code/                     # Project's firmware and STM32 build configuration
+├── hardware/                 # Schematic files and custom structural designs
+├── documentation/            # Academic documentation and project presentations
+├── resources/                # External reference documentation
+└── testing/                  # Standalone testing frameworks
+```
+
+> NOTE: every main directory in this repository contains a dedicated `README.md`. Please refer to those local files for thorough setup steps, configuration details, and specialized technical overviews relevant to each module.
+
+
+
+---
+
+## 2. Project overview
 
 This project is a robotic "hearing" system that can detect where a sound is coming from and automatically turn to face it.
 
@@ -15,24 +32,6 @@ Using an STM32 microcontroller and two standard microphones, the system acts lik
 
 ![acutal robot](documentation/utils/robot.jpg)
 > Figure: The final robotic project
-
----
-
-## 2. Project structure
-
-```text
-.
-├── README.md                 # Main project overview
-├── code/                     # Project's firmware and STM32 build configuration
-├── documentation/            # Academic documentation and project presentations
-├── hardware/                 # Schematic files and custom structural designs
-├── resources/                # Media assets and external reference documentation
-└── testing/                  # Standalone testing frameworks
-```
-
-> NOTE: every main directory in this repository contains a dedicated `README.md`. Please refer to those local files for thorough setup steps, configuration details, and specialized technical overviews relevant to each module.
-
-
 
 ---
 
@@ -203,7 +202,7 @@ The digital signal processing (DSP) pipeline was fully validated on the NUCLEO-U
 To isolate human speech from environmental noise, the incoming audio passes through a custom 6th-order Butterworth bandpass filter (300 Hz to 3000 Hz). As shown below, the filter successfully suppresses low-frequency hums (100 Hz) and high-frequency noise (6 kHz), completely flattening the noise floor to provide clean signals for cross-correlation:
 
 ![Signal Filtering Output](documentation/utils/analysis_baseline.png)
-> *Figure: Raw recording with environmental noise disturbances (top) and the resulting clean, flattened noise floor after 6th-order filtering (bottom).*
+> Figure: Raw recording with environmental noise disturbances (top) and the resulting clean, flattened noise floor after 6th-order filtering (bottom).
 
 ### 8.2 Pipeline execution and sound tracking
 When a sound is detected, the conditioned signals undergo a boundary-optimized cross-correlation to pinpoint the exact time delay. 
